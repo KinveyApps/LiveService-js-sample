@@ -1,26 +1,31 @@
 import { Routes } from '@angular/router';
 
-import { AboutComponent } from './about/about.component';
+import { AuthGuard, UnauthGuard } from './shared';
+
+import { LoginComponent } from './login/login.component';
+import { JoinComponent } from './join/join.component';
 import { HomeComponent } from './home/home.component';
-import { RepoBrowserComponent } from './github/repo-browser/repo-browser.component';
-import { RepoListComponent } from './github/repo-list/repo-list.component';
-import { RepoDetailComponent } from './github/repo-detail/repo-detail.component';
-import { ContactComponent } from './contact/contact.component';
+import { NewAuctionComponent } from './new-auction/new-auction.component';
+import { AuctionComponent } from './auction/auction.component';
+import { SignupComponent } from './signup/signup.component';
 
 export const rootRouterConfig: Routes = [
   { path: '', redirectTo: 'home', pathMatch: 'full' },
-  { path: 'home', component: HomeComponent },
-  { path: 'about', component: AboutComponent },
-  { path: 'github', component: RepoBrowserComponent,
-    children: [
-      { path: '', component: RepoListComponent },
-      { path: ':org', component: RepoListComponent,
-        children: [
-          { path: '', component: RepoDetailComponent },
-          { path: ':repo', component: RepoDetailComponent }
-        ]
-      }]
-  },
-  { path: 'contact', component: ContactComponent }
-];
+  { path: 'home', component: HomeComponent, canActivate: [AuthGuard] },
+  { path: 'auctions/:id', component: AuctionComponent, canActivate: [AuthGuard] },
+  { path: 'new', component: NewAuctionComponent, canActivate: [AuthGuard] },
+  { path: 'join', component: JoinComponent, canActivate: [AuthGuard] },
+  { path: 'login', component: LoginComponent, canActivate: [UnauthGuard] },
+  { path: 'signup', component: SignupComponent, canActivate: [UnauthGuard] },
 
+  // { path: 'github', component: RepoBrowserComponent,
+  //   children: [
+  //     { path: '', component: RepoListComponent },
+  //     { path: ':org', component: RepoListComponent,
+  //       children: [
+  //         { path: '', component: RepoDetailComponent },
+  //         { path: ':repo', component: RepoDetailComponent }
+  //       ]
+  //     }]
+  // }
+];

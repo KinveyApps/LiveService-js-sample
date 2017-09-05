@@ -8,10 +8,6 @@
     "server": "webpack-dev-server --inline --progress --port 3000 --content-base src",
     "start": "npm run server"
   },
-  "contributors": [
-    "Rob Wormald <robwormald@gmail.com>",
-    "PatrickJS <github@gdi2290.com>"
-  ],
   "license": "MIT",
   "dependencies": {
     "@angular/common": "~4.0.1",
@@ -33,7 +29,7 @@
     "zone.js": "^0.8.4"
   },
   "devDependencies": {
-    "@types/node": "^7.0.12",
+    "@types/node": "^6.0.0",
     "angular2-router-loader": "^0.3.4",
     "angular2-template-loader": "^0.6.0",
     "awesome-typescript-loader": "^3.1.2",
@@ -45,7 +41,8 @@
     "typescript": "~2.2.0",
     "webpack": "^2.4.1",
     "webpack-dev-server": "2.4.2",
-    "webpack-merge": "^4.1.0"
+    "webpack-merge": "^4.1.0",
+    "kinvey-angular2-sdk": "file:C:\\Work\\kinvey\\angular2-sdk"
   },
   "keywords": [
     "Angular2",

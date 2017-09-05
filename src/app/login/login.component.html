@@ -1,0 +1,18 @@
+<h3 class="text-center">Login</h3>
+
+<main>
+  <div class="row">
+    <div class="col-sm-6 col-sm-offset-3">
+      <div class="form-group">
+        <div class="row">
+          <input class="form-control" type="text" placeholder="Username" [(ngModel)]="user.username" />
+          <input class="form-control" type="password" placeholder="Password" [(ngModel)]="user.password" />
+        </div>
+        <div class="row">
+          <button class="btn btn-success" (click)="logIn()">Log in</button>
+          <button class="btn btn-info pull-right" [routerLink]="['/signup']">Sign up</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</main>

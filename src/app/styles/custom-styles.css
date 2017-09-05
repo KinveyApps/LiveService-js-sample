@@ -1,0 +1,11 @@
+body {
+  padding: 0 25px;
+}
+
+.auction-list .auction {
+  cursor: pointer;
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}

@@ -1,2 +1,25 @@
-<h3>Home Component</h3>
-<p>Welcome to Angular Seed</p>
+<h1>All Auctions</h1>
+
+<main>
+  <!-- <button (click)="detect()">Test</button> -->
+
+  <table class="auction-list table table-striped table-hover">
+    <thead>
+      <tr>
+        <th>Auctioned Item</th>
+        <th>Auction Start</th>
+        <th>Auction End</th>
+        <th>Current Bid</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      <tr class="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)">
+        <td><span>{{auction.item}}</span></td>
+        <td><span>{{auction.start | date}}</span></td>
+        <td><span>{{auction.end | date}}</span></td>
+        <td><span>{{auction.currentBid | currency:USD:true}}</span></td>
+      </tr>
+    </tbody>
+  </table>
+</main>

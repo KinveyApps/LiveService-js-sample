@@ -1,29 +1,30 @@
-<h3>
-  Angular 2 Seed
+<h3 class="text-center">
+  Online Auctions!
 </h3>
-<nav>
-	<a [routerLink]="['/']">
-    Home
-  </a>
-  |
-	<a [routerLink]="['/about']">
-    About
-  </a>
-  |
-	<a [routerLink]="['/github', 'angular']">
-    Github Repos
-  </a>
-  |
-	<a [routerLink]="['/contact']">
-    Contact Us
-  </a>
+
+<nav class="navbar navbar-default" *ngIf="isLoggedIn">
+  <div class="container-fluid">
+
+    <ul class="nav navbar-nav">
+      <li routerLinkActive="active">
+        <a [routerLink]="['/home']">Auctions</a>
+      </li>
+      <li routerLinkActive="active">
+        <a [routerLink]="['/new']">New Auction</a>
+      </li>
+      <li routerLinkActive="active">
+        <a [routerLink]="['/join']">Join Auction</a>
+      </li>
+    </ul>
+
+    <ul class="nav navbar-nav navbar-right">
+      <li class="cursor-pointer">
+        <a (click)="logout()">Logout</a>
+      </li>
+    </ul>
+  </div>
 </nav>
 
 <main>
-	<router-outlet></router-outlet>
+  <router-outlet></router-outlet>
 </main>
-
-
-<footer>
-  © 2017
-</footer>
