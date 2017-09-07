@@ -1,0 +1,5 @@
+<main *ngIf="auction">
+  <h2 class="text-center">Auction for "{{auction.item}}"</h2>
+
+  <span>Current Bid: {{auction.currentBid | currency:USD:true}}</span>
+</main>

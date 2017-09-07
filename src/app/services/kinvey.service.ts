@@ -1,7 +1,4 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
-import { ReplaySubject } from 'rxjs/ReplaySubject';
-// import { Subscriber } from 'rxjs/Subscriber';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
 
@@ -17,7 +14,7 @@ export class KinveyService {
     });
   }
 
-  get LiveService() {
+  private get LiveService() {
     return (Kinvey as any).LiveService;
   }
 
@@ -37,12 +34,24 @@ export class KinveyService {
     return Kinvey.User.signup(creds);
   }
 
+  liveServiceInitialized(): boolean {
+    return this.LiveService.isInitialized();
+  }
+
   initLiveService(): Promise<void> {
     const user = Kinvey.User.getActiveUser() as any;
     if (user) {
       return user.registerForLiveService();
     }
     return Promise.reject(new Error('No active user'));
+  }
+
+  uninitializeLiveService() {
+    const user = Kinvey.User.getActiveUser() as any;
+    if (user) {
+      return user.unregisterFromLiveService();
+    }
+    return Promise.resolve();
   }
 
   getNewStream(name: string) {
@@ -53,19 +62,23 @@ export class KinveyService {
     return Kinvey.DataStore.collection<T>(name, Kinvey.DataStoreType.Network); // parametarize type?
   }
 
-  getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity>)
-  getLiveCollection(collection: string)
-  getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity> | string) {
-    if (typeof collection === 'string') {
-      collection = this.getNewCollection(collection);
-    }
-
-    (collection as any).subscribe({
-      onMessage: () => {
-        console.log(this);
-      }
-    });
-
-
+  getNewQuery() {
+    return new Kinvey.Query();
   }
+
+  // getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity>)
+  // getLiveCollection(collection: string)
+  // getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity> | string) {
+  //   if (typeof collection === 'string') {
+  //     collection = this.getNewCollection(collection);
+  //   }
+
+  //   (collection as any).subscribe({
+  //     onMessage: () => {
+  //       console.log(this);
+  //     }
+  //   });
+
+
+  // }
 }

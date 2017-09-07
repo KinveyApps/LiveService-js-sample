@@ -20,6 +20,7 @@
         <td><span>{{auction.end | date}}</span></td>
         <td><span>{{auction.currentBid | currency:USD:true}}</span></td>
       </tr>
+      <!-- <tr class="auction" auction-list-item [auction]="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)"></tr> -->
     </tbody>
   </table>
 </main>

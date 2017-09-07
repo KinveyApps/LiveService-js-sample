@@ -1,12 +1,8 @@
 import { Component, OnInit, OnDestroy } from '@angular/core';
 import { ActivatedRoute } from '@angular/router';
-// import { FormBuilder, FormGroup, Validators } from '@angular/forms';
-// import CustomValidators from '../forms/CustomValidators';
+import { Observable } from 'rxjs/Observable';
 
-import {
-  // KinveyService,
-  AuctionsService
-} from '../services';
+import { AuctionsService } from '../services';
 import { Auction } from '../models';
 
 @Component({
@@ -15,11 +11,9 @@ import { Auction } from '../models';
   styleUrls: ['./auction.component.css']
 })
 export class AuctionComponent implements OnInit {
-  // contactForm: FormGroup;
-  // constructor(private formBuilder: FormBuilder) {}
   private _paramSub;
 
-  auction: Promise<Auction>;
+  auction: Observable<Auction>;
 
   constructor(
     private _route: ActivatedRoute,
@@ -28,19 +22,14 @@ export class AuctionComponent implements OnInit {
 
   ngOnInit() {
     this._paramSub = this._route.params.subscribe(p => {
-      const id = p.id;
-      this.auction = this._auctionsService.getById(id);
-    })
-    // this.contactForm = this.formBuilder.group({
-    //   name: ['', Validators.required],
-    //   email: ['', [Validators.required, CustomValidators.validateEmail]],
-    //   content: ['', [Validators.required, Validators.minLength(10)]]
-    // });
+      this.auction = this._auctionsService.subscribeForAuctionUpdates(p.id);
+    });
   }
 
   ngOnDestroy() {
     if (this._paramSub) {
       this._paramSub.unsubscribe();
     }
+    this._auctionsService.unsubscribeFromAuctionUpdates();
   }
 }

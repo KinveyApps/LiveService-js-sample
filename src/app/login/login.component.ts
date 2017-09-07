@@ -20,6 +20,6 @@ export class LoginComponent {
   logIn() {
     this._usersService.loginUser(this.user)
       .then(() => this._router.navigateByUrl('/home'))
-      .catch(err => this._alertService.showMessage(err.message));
+      .catch(err => this._alertService.showError(err.message));
   }
 }

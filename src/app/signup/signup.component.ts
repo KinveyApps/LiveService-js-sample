@@ -19,19 +19,16 @@ export class SignupComponent {
 
   signUp() {
     if (this.user.password !== this.user.repeatPassword) {
-      return this._alertService.showMessage('Passwords do not match');
+      return this._alertService.showError('Passwords do not match');
     }
 
     if (this.user.username === '' || this.user.password === '') {
-      return this._alertService.showMessage('Invalid username or password');
+      return this._alertService.showError('Invalid username or password');
     }
 
     delete this.user.repeatPassword;
     this._usersService.signUpUser(this.user)
-      .then(() => {
-        console.log('bef');
-        this._router.navigateByUrl('/home');
-      })
-      .catch(err => this._alertService.showMessage(err.message));
+      .then(() => this._router.navigateByUrl('/home'))
+      .catch(err => this._alertService.showError(err.message));
   }
 }

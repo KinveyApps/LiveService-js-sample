@@ -9,7 +9,7 @@ import { HttpModule } from '@angular/http';
 
 import { AuthGuard } from './shared';
 import { UnauthGuard } from './shared';
-import { KinveyService, AlertService, AuctionsService, UsersService } from './services';
+import { KinveyService, AlertService, AuctionsService, UsersService, LiveDataService } from './services';
 
 import { LoginComponent } from './login/login.component';
 import { JoinComponent } from './join/join.component';
@@ -17,6 +17,8 @@ import { AuctionComponent } from './auction/auction.component';
 import { HomeComponent } from './home/home.component';
 import { NewAuctionComponent } from './new-auction/new-auction.component';
 import { SignupComponent } from './signup/signup.component';
+import { AuctionDetailsComponent } from './auctions/auction-details/auction-details.component';
+import { AuctionListItemComponent } from './auctions/auction-list-item/auction-list-item.component';
 
 @NgModule({
   declarations: [
@@ -26,7 +28,9 @@ import { SignupComponent } from './signup/signup.component';
     NewAuctionComponent,
     LoginComponent,
     JoinComponent,
-    SignupComponent
+    SignupComponent,
+    AuctionDetailsComponent,
+    AuctionListItemComponent
   ],
   imports: [
     BrowserModule,
@@ -39,6 +43,7 @@ import { SignupComponent } from './signup/signup.component';
     KinveyService,
     AlertService,
     AuctionsService,
+    LiveDataService,
     UsersService,
     AuthGuard,
     UnauthGuard

@@ -1,18 +1,19 @@
-import { Component, NgZone } from '@angular/core';
+import { Component, OnDestroy, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 
 import { Observable } from 'rxjs/Observable';
 
-import { UsersService, AlertService } from './services';
+import { UsersService, AlertService, LiveDataService } from './services';
 
 @Component({
   selector: 'app',
   templateUrl: './app.component.html'
 })
-export class AppComponent {
+export class AppComponent implements OnDestroy {
   isLoggedIn: boolean;
 
   constructor(
+    private _liveDataService: LiveDataService,
     private _usersService: UsersService,
     private _alertService: AlertService,
     private _router: Router,
@@ -28,6 +29,10 @@ export class AppComponent {
   logout() {
     this._usersService.logoutUser()
       .then(() => this._router.navigateByUrl('/login'))
-      .catch(e => this._alertService.showMessage(e.message));
+      .catch(e => this._alertService.showError(e.message));
+  }
+
+  ngOnDestroy() {
+    this._liveDataService.uninitialize();
   }
 }
