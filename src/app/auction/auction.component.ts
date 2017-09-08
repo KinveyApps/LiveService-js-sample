@@ -19,6 +19,7 @@ export class AuctionComponent implements OnInit {
 
   liveAuction: Observable<Auction>;
   auction: Auction;
+  userBid: number;
 
   constructor(
     private _route: ActivatedRoute,
@@ -56,6 +57,10 @@ export class AuctionComponent implements OnInit {
     return this.auction && this.auction.end;
   }
 
+  isOngoing() {
+    return this.hasStarted() && !this.hasEnded();
+  }
+
   startAuction() {
     const confirmed = this._alertService.askConfirmation(`Start auction for ${this.auction.item}?`);
     if (confirmed) {
@@ -64,8 +69,25 @@ export class AuctionComponent implements OnInit {
     }
   }
 
-  joinAuction() {
-    console.log('join clicked');
+  userHasRegistered() {
+    return this._auctionsService.userIsRegistered(this.currentUser._id, this.auction);
+  }
+
+  register() {
+    this._auctionsService.registerForAuction(this.auction, this.currentUser._id)
+      .catch(e => this._alertService.showError(e.message));
+  }
+
+  unregister() {
+    const confirmed = this._alertService.askConfirmation(`Unregister from the auction for ${this.auction.item}?`);
+    if (confirmed) {
+      this._auctionsService.unregisterFromAuction(this.auction, this.currentUser._id)
+        .catch(e => this._alertService.showError(e.message));
+    }
+  }
+
+  submitBid() {
+    console.log('submit bid of ' + this.userBid);
   }
 
   finishAuction() {

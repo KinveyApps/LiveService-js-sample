@@ -1,17 +1,27 @@
-import { Component, Input } from '@angular/core';
-import { Router } from '@angular/router';
+import { Component, Input, OnInit } from '@angular/core';
 
-import { AuctionsService, UsersService, AlertService } from '../../services';
+import { AuctionsService, AlertService } from '../../services';
 import { Auction } from '../../models';
-
-import { userIsOwner } from '../../shared';
 
 @Component({
   selector: 'auction-details',
   styleUrls: ['./auction-details.component.css'],
   templateUrl: './auction-details.component.html'
 })
-export class AuctionDetailsComponent {
+export class AuctionDetailsComponent implements OnInit {
   @Input()
   auction: Auction;
+
+  constructor(
+    private _auctionsService: AuctionsService,
+    private _alertService: AlertService
+  ) {}
+
+  ngOnInit() {
+  }
+
+  getParticipants() {
+    const participants = this.auction.participants || [];
+    return participants.length;
+  }
 }

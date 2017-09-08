@@ -7,9 +7,10 @@ import 'rxjs/add/operator/map';
 import { Kinvey } from 'kinvey-angular2-sdk';
 
 import { KinveyService } from './kinvey.service';
+import { UsersService } from './users.service';
 import { LiveDataService } from './live-data.service';
 import { Auction } from '../models';
-import { isNonemptyString, cloneObject } from '../shared';
+import { isNonemptyString, cloneObject, wrapInNativePromise } from '../shared';
 
 const collectionName = 'Auctions';
 
@@ -19,7 +20,8 @@ export class AuctionsService {
 
   constructor(
     private _kinveyService: KinveyService,
-    private _liveDataService: LiveDataService
+    private _liveDataService: LiveDataService,
+    private _usersService: UsersService
   ) {
     this._auctions = _kinveyService.getNewCollection<Auction>(collectionName);
   }
@@ -30,12 +32,12 @@ export class AuctionsService {
 
   getWithQuery(query?: Kinvey.Query) {
     const obs = this._auctions.find(query);
-    return this._wrapInNativePromise(obs);
+    return wrapInNativePromise(obs);
   }
 
   getById(id: string) {
     const obs = this._auctions.findById(id);
-    return this._wrapInNativePromise(obs);
+    return wrapInNativePromise(obs);
   }
 
   subscribeForAuctionAndUpdates(auctionId?: string): Observable<Auction>
@@ -90,6 +92,32 @@ export class AuctionsService {
     return this._auctions.update(copy);
   }
 
+  registerForAuction(auction: Auction, userId: string) {
+    const copy = cloneObject(auction);
+    copy.participants = copy.participants || [];
+    copy.participants.push(userId);
+    return this._auctions.update(copy);
+  }
+
+  userIsRegistered(userId: string, auction: Auction) {
+    return auction.participants && auction.participants.indexOf(userId) >= 0;
+  }
+
+  unregisterFromAuction(auction: Auction, userId: string) {
+    const copy = cloneObject(auction);
+    if (!copy.participants) {
+      return Promise.resolve(auction);
+    }
+    copy.participants = copy.participants.filter(p => p !== userId);
+    return this._auctions.update(copy);
+  }
+
+  // getParticipants(auction: Auction) {
+  //   const query = this._kinveyService.getNewQuery()
+  //     .contains('_id', auction.participants);
+  //   return this._usersService.getWithQuery(query);
+  // }
+
   validateAuctionData(auction: any) {
     let errorMsg: string = null;
 
@@ -102,16 +130,5 @@ export class AuctionsService {
     }
 
     return errorMsg;
-  }
-
-  private _wrapInNativePromise<T>(promise: Promise<T>): Promise<T>
-  private _wrapInNativePromise<T>(promise: Observable<T>): Promise<T>
-  private _wrapInNativePromise<T>(asyncTask: Promise<T> | Observable<T>): Promise<T> {
-    const task = asyncTask as any;
-    const promise: Promise<any> = task.then ? task : task.toPromise();
-
-    return new Promise((resolve, reject) => {
-      promise.then(resolve, reject);
-    });
   }
 }

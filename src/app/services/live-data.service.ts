@@ -5,19 +5,21 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
+import { Entity, Stream, CacheStore } from '../models';
 
 import { KinveyService } from './kinvey.service';
 
 @Injectable()
 export class LiveDataService {
-  private updatesByCollection: { [collName: string]: ReplaySubject<Kinvey.Entity> } = {};
+  private updatesByCollection: { [collName: string]: ReplaySubject<Entity> } = {};
+  private streamsById: { [ownerId: string]: Stream } = {};
 
   constructor(
     private _kinveyService: KinveyService,
     private _zone: NgZone
   ) { }
 
-  subscribeForCollectionUpdates<T extends Kinvey.Entity>(collectionName: string, interestedIn?: Kinvey.Entity[]): Observable<T> {
+  subscribeForCollectionUpdates<T extends Entity>(collectionName: string, interestedIn?: Entity[]): Observable<T> {
     if (!this.isSubbedForCollection(collectionName)) {
       this._subForCollection(collectionName);
     }
@@ -47,6 +49,12 @@ export class LiveDataService {
     return !!this.updatesByCollection[collectionName];
   }
 
+  subscribeToStream(streamName: string, streamOwnerId: string) {
+    const stream = this._kinveyService.getNewStream(streamName);
+    this.streamsById[streamOwnerId] = stream;
+    // todo...
+  }
+
   private _ensureLiveServiceInit() {
     let promise = Promise.resolve();
     if (!this._kinveyService.liveServiceInitialized()) {
@@ -57,7 +65,7 @@ export class LiveDataService {
 
   private _subForCollection(collectionName: string) {
     const collection = this._kinveyService.getNewCollection(collectionName);
-    const subj = new ReplaySubject<Kinvey.Entity>(1);
+    const subj = new ReplaySubject<Entity>(1);
     this.updatesByCollection[collectionName] = subj;
 
     this._ensureLiveServiceInit()
@@ -70,7 +78,7 @@ export class LiveDataService {
       });
   }
 
-  private _subForLiveData(collection: Kinvey.CacheStore<Kinvey.Entity>, subj: ReplaySubject<Kinvey.Entity>) {
+  private _subForLiveData(collection: CacheStore<Entity>, subj: ReplaySubject<Entity>) {
     return (collection as any).subscribe({
       onMessage: (msg) => {
         this._zone.run(() => {
@@ -92,7 +100,7 @@ export class LiveDataService {
       });
   }
 
-  private _unsubFromLiveData(collection: Kinvey.CacheStore<Kinvey.Entity>) {
+  private _unsubFromLiveData(collection: CacheStore<Entity>) {
     return (collection as any).unsubscribe();
   }
 }

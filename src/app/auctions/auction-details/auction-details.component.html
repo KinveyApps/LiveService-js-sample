@@ -4,11 +4,14 @@
     <span>Bid: {{auction.currentBid | currency:USD:true}}</span>
   </div>
   <div>
+    <span>Participant count: {{getParticipants()}}</span>
+  </div>
+  <div>
     <div>
-      <span *ngIf="auction.start">Started on {{auction.start | date}}</span>
+      <span *ngIf="auction.start">Started on {{auction.start | date:'medium'}}</span>
     </div>
     <div>
-      <span *ngIf="auction.end">Ended on {{auction.end | date}}</span>
+      <span *ngIf="auction.end">Ended on {{auction.end | date:'medium'}}</span>
     </div>
   </div>
 </div>

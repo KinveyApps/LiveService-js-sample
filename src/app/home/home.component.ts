@@ -80,4 +80,9 @@ export class HomeComponent {
   viewDetails(id: string) {
     this._router.navigateByUrl(`/auctions/${id}`);
   }
+
+  getParticipantCount(auction: Auction) {
+    const participants = auction.participants || [];
+    return participants.length;
+  }
 }

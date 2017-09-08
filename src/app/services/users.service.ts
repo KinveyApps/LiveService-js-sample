@@ -3,6 +3,8 @@ import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 
 import { KinveyService } from './kinvey.service';
+import { wrapInNativePromise } from '../shared';
+import { Query } from '../models';
 
 @Injectable()
 export class UsersService {
@@ -10,7 +12,7 @@ export class UsersService {
 
   constructor(
     private _kinveyService: KinveyService
-  ) { }
+  ) {}
 
   signUpUser(creds: { username: string, password: string }) {
     return this._kinveyService.signUpUser(creds)
@@ -26,6 +28,11 @@ export class UsersService {
 
   getCurrentUser() {
     return this._kinveyService.getActiveUser();
+  }
+
+  getWithQuery(query: Query) {
+    const obs = this._kinveyService.userLookup(query);
+    return wrapInNativePromise(obs);
   }
 
   loginUser(creds: { username: string, password: string }) {

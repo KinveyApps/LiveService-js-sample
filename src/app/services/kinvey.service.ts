@@ -1,8 +1,8 @@
 import { Injectable } from '@angular/core';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
+import { Stream } from '../models';
 
-// TODO: separate into different services
 @Injectable()
 export class KinveyService {
   private _isLoggedIn = false;
@@ -18,8 +18,16 @@ export class KinveyService {
     return (Kinvey as any).LiveService;
   }
 
+  // invokeCustomEndpoint(endpoint: string, body: any) {
+  //   return Kinvey.CustomEndpoint.execute(endpoint, body);
+  // }
+
   getActiveUser() {
     return Kinvey.User.getActiveUser();
+  }
+
+  userLookup(query: Kinvey.Query) {
+    return Kinvey.User.lookup(query);
   }
 
   loginUser(creds: { username: string, password: string }) {
@@ -54,7 +62,7 @@ export class KinveyService {
     return Promise.resolve();
   }
 
-  getNewStream(name: string) {
+  getNewStream(name: string): Stream {
     return (Kinvey as any).LiveService.Stream(name);
   }
 

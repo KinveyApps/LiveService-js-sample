@@ -1,14 +1,34 @@
 <main>
 
   <div *ngIf="auction">
-    <div *ngIf="isOwner()">
-      <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
-      <button *ngIf="hasStarted() && !hasEnded()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
-      <button (click)="deleteAuction()" class="btn btn-sm btn-danger">Delete Auction</button>
-    </div>
-    <button *ngIf="!isOwner() && hasStarted() && !hasEnded()" (click)="joinAuction()" class="btn btn-sm btn-success">Join Auction</button>
-  </div>
 
-  <auction-details [auction]="liveAuction | async"></auction-details>
+    <div>
+      <div *ngIf="isOwner()">
+        <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
+        <button *ngIf="isOngoing()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
+        <button (click)="deleteAuction()" class="btn btn-sm btn-danger">Delete Auction</button>
+      </div>
+      <button *ngIf="!isOwner() && !hasStarted() && !userHasRegistered()" (click)="register()" class="btn btn-sm btn-success">Register for Auction</button>
+      <button *ngIf="!isOwner() && !hasStarted() && userHasRegistered()" (click)="unregister()" class="btn btn-sm btn-danger">Unregister from Auction</button>
+    </div>
+
+    <div>
+      <auction-details [auction]="liveAuction | async"></auction-details>
+      <span *ngIf="userHasRegistered()" class="label label-success">You have registered</span>
+    </div>
+
+    <div *ngIf="!isOwner() && isOngoing()">
+      <div class="form-group">
+        <label class="control-label">Bid on {{auction.item}}</label>
+        <div class="input-group">
+          <span class="input-group-addon">$</span>
+          <input [(ngModel)]="userBid" type="number" class="form-control">
+          <span class="input-group-btn">
+            <button (click)="submitBid()" class="btn btn-default">Submit Bid</button>
+          </span>
+        </div>
+      </div>
+    </div>
+  </div>
 
 </main>
