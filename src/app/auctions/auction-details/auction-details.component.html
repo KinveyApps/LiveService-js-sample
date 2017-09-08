@@ -1,5 +1,14 @@
-<main *ngIf="auction">
-  <h2 class="text-center">Auction for "{{auction.item}}"</h2>
-
-  <span>Current Bid: {{auction.currentBid | currency:USD:true}}</span>
-</main>
+<div *ngIf="auction">
+  <div>
+    <h2 class="text-center">Auction for "{{auction.item}}"</h2>
+    <span>Bid: {{auction.currentBid | currency:USD:true}}</span>
+  </div>
+  <div>
+    <div>
+      <span *ngIf="auction.start">Started on {{auction.start | date}}</span>
+    </div>
+    <div>
+      <span *ngIf="auction.end">Ended on {{auction.end | date}}</span>
+    </div>
+  </div>
+</div>

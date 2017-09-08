@@ -1,3 +1,14 @@
 <main>
-  <auction-details [auction]="auction | async"></auction-details>
+
+  <div *ngIf="auction">
+    <div *ngIf="isOwner()">
+      <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
+      <button *ngIf="hasStarted() && !hasEnded()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
+      <button (click)="deleteAuction()" class="btn btn-sm btn-danger">Delete Auction</button>
+    </div>
+    <button *ngIf="!isOwner() && hasStarted() && !hasEnded()" (click)="joinAuction()" class="btn btn-sm btn-success">Join Auction</button>
+  </div>
+
+  <auction-details [auction]="liveAuction | async"></auction-details>
+
 </main>

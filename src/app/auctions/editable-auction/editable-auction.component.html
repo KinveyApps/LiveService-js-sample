@@ -1,0 +1,25 @@
+<!-- <span>{{auction.item}}</span>
+<span>{{auction.currentBid | currency:USD:true}}</span> -->
+
+<div class="row">
+  <div class="col-sm-6 col-lg-4 col-sm-offset-3 col-lg-offset-4">
+    <div class="form-group">
+      <label class="control-label" for="item">Item for auction</label>
+      <input class="form-control input-sm" [(ngModel)]="auction.item" type="text" id="item">
+    </div>
+    <div class="form-group">
+      <label class="control-label" for="bid">Starting bid</label>
+      <input class="form-control input-sm" [(ngModel)]="auction.currentBid" type="number" min="0" id="bid">
+    </div>
+    <!-- <div class="form-group">
+      <label class="control-label">Starting bid</label>
+      <div class="input-group">
+        <span class="input-group-addon group-addon-sm">$</span>
+        <input [(ngModel)]="auction.currentBid" type="text" class="form-control input-sm">
+        <span class="input-group-btn">
+      <button class="btn btn-default btn-sm" type="button">Button</button>
+    </span>
+      </div>
+    </div> -->
+  </div>
+</div>

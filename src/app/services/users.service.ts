@@ -21,7 +21,11 @@ export class UsersService {
   }
 
   isUserLoggedIn() {
-    return !!this._kinveyService.getActiveUser();
+    return !!this.getCurrentUser();
+  }
+
+  getCurrentUser() {
+    return this._kinveyService.getActiveUser();
   }
 
   loginUser(creds: { username: string, password: string }) {

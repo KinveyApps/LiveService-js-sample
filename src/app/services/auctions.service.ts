@@ -2,12 +2,14 @@ import { Injectable } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/merge';
+import 'rxjs/add/operator/map';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
 
 import { KinveyService } from './kinvey.service';
 import { LiveDataService } from './live-data.service';
 import { Auction } from '../models';
+import { isNonemptyString, cloneObject } from '../shared';
 
 const collectionName = 'Auctions';
 
@@ -36,30 +38,70 @@ export class AuctionsService {
     return this._wrapInNativePromise(obs);
   }
 
-  subscribeForAuctionUpdates(auctionId?: string): Observable<Auction|Auction[]>
-  subscribeForAuctionUpdates(auctions?: Auction[]): Observable<Auction|Auction[]>
-  subscribeForAuctionUpdates(auctionIds?: string | Auction[]): Observable<Auction|Auction[]> {
-    let filter: { _id: string }[] = null;
-    if (auctionIds) {
-      filter = Array.isArray(auctionIds) ? auctionIds : [{ _id: auctionIds }];
-    }
-    const subObs = this._liveDataService.subscribeForCollectionUpdates<Auction>(collectionName, filter)
-    const query = this._kinveyService.getNewQuery()
-      .contains('_id', filter.map(f => f._id));
-
-    const prm = this.getWithQuery(query)
-      .then(res => {
-        if (typeof auctionIds === 'string') {
-          return res && res[0];
+  subscribeForAuctionAndUpdates(auctionId?: string): Observable<Auction>
+  subscribeForAuctionAndUpdates(auction?: Auction): Observable<Auction[]>
+  subscribeForAuctionAndUpdates(identifier?: string | Auction): Observable<Auction | Auction[]> {
+    const filter = typeof identifier === 'string' ? [{ _id: identifier }] : [identifier];
+    return this.subscribeToAuctionCollectionWithInitialValue(filter)
+      .map(arr => {
+        if (Array.isArray(arr) && arr.length === 1) {
+          // is initial value from given filter by id
+          return arr[0];
         }
-        return res;
-      })
+        return arr;
+      });
+  }
+
+  subscribeToAuctionCollectionWithInitialValue(interestedIn: { _id: string }[]) {
+    const query = this._kinveyService.getNewQuery()
+      .contains('_id', interestedIn.map(f => f._id));
+
+    const prm = this.getWithQuery(query);
     const firstValueObs = Observable.fromPromise(prm);
+    const subObs = this.subscribeToAuctionCollection(interestedIn);
     return firstValueObs.merge(subObs);
+  }
+
+  subscribeToAuctionCollection(interestedIn: { _id: string }[]) {
+    return this._liveDataService.subscribeForCollectionUpdates<Auction>(collectionName, interestedIn);
   }
 
   unsubscribeFromAuctionUpdates() {
     return this._liveDataService.unsubscribeFromCollection(collectionName);
+  }
+
+  create(auction: Auction) {
+    return this._auctions.save(auction);
+  }
+
+  delete(auctionId: string) {
+    return this._auctions.removeById(auctionId);
+  }
+
+  startAuction(auction: Auction) {
+    const copy = cloneObject(auction);
+    copy.start = new Date().toISOString();
+    return this._auctions.update(copy);
+  }
+
+  finishAuction(auction: Auction) {
+    const copy = cloneObject(auction);
+    copy.end = new Date().toISOString();
+    return this._auctions.update(copy);
+  }
+
+  validateAuctionData(auction: any) {
+    let errorMsg: string = null;
+
+    if (!isNonemptyString(auction.item)) {
+      errorMsg = 'Invalid auction item';
+    }
+
+    if (typeof auction.currentBid !== 'number' || auction.currentBid < 0) {
+      errorMsg = 'Invalid starting bid';
+    }
+
+    return errorMsg;
   }
 
   private _wrapInNativePromise<T>(promise: Promise<T>): Promise<T>

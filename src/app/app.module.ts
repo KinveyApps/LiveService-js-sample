@@ -17,8 +17,11 @@ import { AuctionComponent } from './auction/auction.component';
 import { HomeComponent } from './home/home.component';
 import { NewAuctionComponent } from './new-auction/new-auction.component';
 import { SignupComponent } from './signup/signup.component';
-import { AuctionDetailsComponent } from './auctions/auction-details/auction-details.component';
-import { AuctionListItemComponent } from './auctions/auction-list-item/auction-list-item.component';
+import {
+  AuctionDetailsComponent,
+  AuctionListItemComponent,
+  EditableAuctionComponent
+} from './auctions';
 
 @NgModule({
   declarations: [
@@ -30,7 +33,8 @@ import { AuctionListItemComponent } from './auctions/auction-list-item/auction-l
     JoinComponent,
     SignupComponent,
     AuctionDetailsComponent,
-    AuctionListItemComponent
+    AuctionListItemComponent,
+    EditableAuctionComponent
   ],
   imports: [
     BrowserModule,
