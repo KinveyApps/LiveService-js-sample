@@ -9,10 +9,11 @@ import { Kinvey } from 'kinvey-angular2-sdk';
 import { KinveyService } from './kinvey.service';
 import { UsersService } from './users.service';
 import { LiveDataService } from './live-data.service';
-import { Auction } from '../models';
+import { Auction, BidMessage, StreamMessageType } from '../models';
 import { isNonemptyString, cloneObject, wrapInNativePromise } from '../shared';
 
 const collectionName = 'Auctions';
+const streamName = collectionName;
 
 @Injectable()
 export class AuctionsService {
@@ -80,36 +81,62 @@ export class AuctionsService {
     return this._auctions.removeById(auctionId);
   }
 
-  startAuction(auction: Auction) {
+  startAuction(auction: Auction, onBids: (bid: BidMessage) => void) {
     const copy = cloneObject(auction);
     copy.start = new Date().toISOString();
-    return this._auctions.update(copy);
+    const updatePromise = this._auctions.update(copy);
+    const streamPromises = auction.participants.map(participantId => {
+      return this._liveDataService.subscribeToStream(streamName, participantId, (msg) => {
+        onBids(msg);
+      });
+    });
+    return Promise.all(streamPromises.concat(updatePromise));
   }
 
   finishAuction(auction: Auction) {
     const copy = cloneObject(auction);
     copy.end = new Date().toISOString();
-    return this._auctions.update(copy);
+    const updatePromise = this._auctions.update(copy);
+    const streamPromises = auction.participants.map(participantId => {
+      return this._liveDataService.unsubscribeFromStream(streamName, participantId);
+    });
+    return Promise.all(streamPromises.concat(updatePromise));
   }
 
+  // cant handle multiple auctions
   registerForAuction(auction: Auction, userId: string) {
-    const copy = cloneObject(auction);
-    copy.participants = copy.participants || [];
-    copy.participants.push(userId);
-    return this._auctions.update(copy);
+    const auctionOwnerId = (auction._acl as any).creator;
+
+    return this._liveDataService.setStreamACL(streamName, userId, {
+      publish: [userId, auctionOwnerId],
+      subscribe: [auctionOwnerId]
+    })
+      .then(() => {
+        const copy = cloneObject(auction);
+        copy.participants = copy.participants || [];
+        copy.participants.push(userId);
+        return this._auctions.update(copy);
+      });
+  }
+
+  // cant handle multiple auctions
+  unregisterFromAuction(auction: Auction, userId: string) {
+    return this._liveDataService.setStreamACL(streamName, userId, {
+      publish: [userId],
+      subscribe: []
+    })
+      .then(() => {
+        const copy = cloneObject(auction);
+        if (!copy.participants) {
+          return Promise.resolve(auction);
+        }
+        copy.participants = copy.participants.filter(p => p !== userId);
+        return this._auctions.update(copy);
+      });
   }
 
   userIsRegistered(userId: string, auction: Auction) {
     return auction.participants && auction.participants.indexOf(userId) >= 0;
-  }
-
-  unregisterFromAuction(auction: Auction, userId: string) {
-    const copy = cloneObject(auction);
-    if (!copy.participants) {
-      return Promise.resolve(auction);
-    }
-    copy.participants = copy.participants.filter(p => p !== userId);
-    return this._auctions.update(copy);
   }
 
   // getParticipants(auction: Auction) {
@@ -117,6 +144,16 @@ export class AuctionsService {
   //     .contains('_id', auction.participants);
   //   return this._usersService.getWithQuery(query);
   // }
+
+  bidOnAuction(auction: Auction, bidderId: string, bid: number) {
+    // const streamId: string = (auction._acl as any).creator;
+    const message: BidMessage = {
+      type: StreamMessageType.Bid,
+      fromUser: bidderId,
+      bid: bid
+    };
+    return this._liveDataService.publishToStream(streamName, bidderId, message);
+  }
 
   validateAuctionData(auction: any) {
     let errorMsg: string = null;

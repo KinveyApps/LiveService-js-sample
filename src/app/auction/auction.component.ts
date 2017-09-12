@@ -4,9 +4,9 @@ import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
 import { AuctionsService, UsersService, AlertService } from '../services';
-import { Auction, User } from '../models';
+import { Auction, User, BidMessage } from '../models';
 
-import { userIsOwner } from '../shared';
+import { userIsOwner, constants } from '../shared';
 
 @Component({
   selector: 'auction',
@@ -16,10 +16,13 @@ import { userIsOwner } from '../shared';
 export class AuctionComponent implements OnInit {
   private _paramSub: Subscription;
   private _currentUser: User;
+  newUserBid: number;
+  userBid: number = null;
 
   liveAuction: Observable<Auction>;
   auction: Auction;
-  userBid: number;
+
+  bids: { [userId: string]: number } = {};
 
   constructor(
     private _route: ActivatedRoute,
@@ -41,12 +44,13 @@ export class AuctionComponent implements OnInit {
       this.liveAuction = this._auctionsService.subscribeForAuctionAndUpdates(p.id);
       this.liveAuction.subscribe((auction) => {
         this.auction = auction;
+        this.newUserBid = this.auction.currentBid + constants.auctionMinStep;
       });
     });
   }
 
   isOwner() {
-    return userIsOwner(this.currentUser._id, this.auction);
+    return userIsOwner(this.currentUser, this.auction);
   }
 
   hasStarted() {
@@ -64,7 +68,9 @@ export class AuctionComponent implements OnInit {
   startAuction() {
     const confirmed = this._alertService.askConfirmation(`Start auction for ${this.auction.item}?`);
     if (confirmed) {
-      this._auctionsService.startAuction(this.auction)
+      this._auctionsService.startAuction(this.auction, () => {
+
+      })
         .catch(e => this._alertService.showError(e.message));
     }
   }
@@ -87,7 +93,8 @@ export class AuctionComponent implements OnInit {
   }
 
   submitBid() {
-    console.log('submit bid of ' + this.userBid);
+    console.log('submit bid of ' + this.newUserBid);
+    this._auctionsService.bidOnAuction(this.auction, this.currentUser._id, this.newUserBid);
   }
 
   finishAuction() {
@@ -112,5 +119,34 @@ export class AuctionComponent implements OnInit {
       this._paramSub.unsubscribe();
     }
     this._auctionsService.unsubscribeFromAuctionUpdates();
+  }
+
+  ensureMinBid() {
+    const minBid = this.getMinBid();
+
+    if (this.newUserBid < minBid) {
+      this.newUserBid = minBid;
+    }
+  }
+
+  bidOnItem() {
+    this._auctionsService.bidOnAuction(this.auction, this.currentUser._id, this.newUserBid)
+      .then(() => {
+        console.log('successfully bid ' + this.newUserBid);
+        this.userBid = this.newUserBid;
+      })
+      .catch(e => this._alertService.showError(e.message));
+  }
+
+  getMinBid() {
+    return this.auction.currentBid + constants.auctionMinStep;
+  }
+
+  isHighestBidder() {
+    return !this.isOwner() && this.userBid !== null && this.userBid === this.auction.currentBid;
+  }
+
+  private onReceivedBid(bid: BidMessage) {
+
   }
 }

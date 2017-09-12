@@ -6,7 +6,7 @@
       <div *ngIf="isOwner()">
         <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
         <button *ngIf="isOngoing()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
-        <button (click)="deleteAuction()" class="btn btn-sm btn-danger">Delete Auction</button>
+        <button [disabled]="isOngoing()" (click)="deleteAuction()" class="btn btn-sm btn-danger" [title]="isOngoing() ? 'Disabled while auction is ongoing' : ''">Delete Auction</button>
       </div>
       <button *ngIf="!isOwner() && !hasStarted() && !userHasRegistered()" (click)="register()" class="btn btn-sm btn-success">Register for Auction</button>
       <button *ngIf="!isOwner() && !hasStarted() && userHasRegistered()" (click)="unregister()" class="btn btn-sm btn-danger">Unregister from Auction</button>
@@ -18,17 +18,23 @@
     </div>
 
     <div *ngIf="!isOwner() && isOngoing()">
-      <div class="form-group">
-        <label class="control-label">Bid on {{auction.item}}</label>
+      <!-- TODO: move this to separate component directive -->
+      <div *ngIf="!isOwner() && !isHighestBidder()" class="form-group">
+        <label class="control-label">Make new bid</label>
         <div class="input-group">
           <span class="input-group-addon">$</span>
-          <input [(ngModel)]="userBid" type="number" class="form-control">
+          <input [(ngModel)]="newUserBid" type="number" [min]="getMinBid()" (blur)="ensureMinBid()" class="form-control">
           <span class="input-group-btn">
-            <button (click)="submitBid()" class="btn btn-default">Submit Bid</button>
+            <button (click)="bidOnItem()" [disabled]="newUserBid < getMinBid()" class="btn btn-default">Submit Bid</button>
           </span>
         </div>
       </div>
     </div>
+
+    <div>
+      {{bids | json}}
+    </div>
+
   </div>
 
 </main>

@@ -1,12 +1,17 @@
 import { Observable } from 'rxjs/Observable';
 
+import { User } from '../models';
+
 export function isNonemptyString(o) {
   return typeof o === 'string' && o !== '';
 }
 
 // { _acl: { creator: string } }
-export function userIsOwner(userId: string, entity: any) {
-  return entity._acl.creator === userId;
+export function userIsOwner(user: User, entity: any);
+export function userIsOwner(userId: string, entity: any);
+export function userIsOwner(userId: string | User, entity: any) {
+  const id = (typeof userId === 'string') ? userId : userId;
+  return !!userId && entity._acl.creator === id;
 }
 
 export function cloneObject<T>(o: T) {

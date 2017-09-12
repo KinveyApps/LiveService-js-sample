@@ -63,7 +63,7 @@ export class KinveyService {
   }
 
   getNewStream(name: string): Stream {
-    return (Kinvey as any).LiveService.Stream(name);
+    return new (Kinvey as any).LiveService.Stream(name);
   }
 
   getNewCollection<T extends Kinvey.Entity>(name: string) {
