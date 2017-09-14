@@ -20,9 +20,10 @@ export class LiveDataService {
   ) { }
 
   subscribeForCollectionUpdates<T extends Entity>(collectionName: string, interestedIn?: Entity[]): Observable<T> {
-    if (!this.isSubbedForCollection(collectionName)) {
-      this._subForCollection(collectionName);
-    }
+    // TODO: check why this was causing problems and if it's necessary
+    // if (!this.isSubbedForCollection(collectionName)) {
+    this._subForCollection(collectionName);
+    // }
 
     return (this.updatesByCollection[collectionName].asObservable() as Observable<T>)
       .filter((item) => {
@@ -31,10 +32,10 @@ export class LiveDataService {
   }
 
   unsubscribeFromCollection(collectionName: string) {
-    if (this.isSubbedForCollection(collectionName)) {
-      return this._unsubFromCollection(collectionName);
-    }
-    return Promise.resolve();
+    // if (this.isSubbedForCollection(collectionName)) {
+    return this._unsubFromCollection(collectionName);
+    // }
+    // return Promise.resolve();
   }
 
   initialize() {
@@ -45,19 +46,23 @@ export class LiveDataService {
     return this._kinveyService.uninitializeLiveService();
   }
 
-  isSubbedForCollection(collectionName: string) {
-    return !!this.updatesByCollection[collectionName];
-  }
+  // isSubbedForCollection(collectionName: string) {
+  //   return !!this.updatesByCollection[collectionName];
+  // }
 
   // subscribeToStream(streamName: string) {
   //   const stream = this._kinveyService.getNewStream(streamName);
   //   this.streamsById[streamName] = stream;
   // }
 
-  subscribeToStream(streamName: string, streamOwnerId: string, receiver: (msg) => void) {
+  subscribeToStream(streamName: string, streamOwnerId: string, receiver: (msg: StreamMessage) => void) {
     const stream = this._getStream(streamName);
     return stream.follow(streamOwnerId, {
-      onMessage: (m) => receiver(m),
+      onMessage: (m) => {
+        this._zone.run(() => {
+          receiver(m);
+        });
+      },
       onError: (e) => console.log(e),
       onStatus: (s) => console.log(s)
     });

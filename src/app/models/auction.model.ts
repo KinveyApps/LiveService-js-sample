@@ -5,5 +5,6 @@ export interface Auction extends Kinvey.Entity {
   currentBid: number,
   participants?: string[];
   start?: string,
-  end?: string
+  end?: string,
+  ask?: number
 }

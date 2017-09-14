@@ -10,11 +10,11 @@ export function isNonemptyString(o) {
 export function userIsOwner(user: User, entity: any);
 export function userIsOwner(userId: string, entity: any);
 export function userIsOwner(userId: string | User, entity: any) {
-  const id = (typeof userId === 'string') ? userId : userId;
+  const id = (typeof userId === 'string') ? userId : userId._acl.creator;
   return !!userId && entity._acl.creator === id;
 }
 
-export function cloneObject<T>(o: T) {
+export function cloneObject<T>(o: T): T {
   const copy = {} as any;
   for (let key in o) {
     if (Array.isArray(o[key])) {

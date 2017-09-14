@@ -1,6 +1,7 @@
 <main>
 
   <div *ngIf="auction">
+    <h1>Auction for {{auction.item}}</h1>
 
     <div>
       <div *ngIf="isOwner()">
@@ -14,25 +15,57 @@
 
     <div>
       <auction-details [auction]="liveAuction | async"></auction-details>
-      <span *ngIf="userHasRegistered()" class="label label-success">You have registered</span>
+      <span *ngIf="userHasRegistered() && !isOngoing()" class="label label-success">You have registered</span>
     </div>
 
     <div *ngIf="!isOwner() && isOngoing()">
+      <div *ngIf="userBid || userBid === 0">
+        <span>Your last bid:</span>
+        <span class="label label-danger">{{ userBid | currency:USD:true }}</span>
+      </div>
+
       <!-- TODO: move this to separate component directive -->
-      <div *ngIf="!isOwner() && !isHighestBidder()" class="form-group">
-        <label class="control-label">Make new bid</label>
-        <div class="input-group">
-          <span class="input-group-addon">$</span>
-          <input [(ngModel)]="newUserBid" type="number" [min]="getMinBid()" (blur)="ensureMinBid()" class="form-control">
-          <span class="input-group-btn">
-            <button (click)="bidOnItem()" [disabled]="newUserBid < getMinBid()" class="btn btn-default">Submit Bid</button>
-          </span>
+      <div *ngIf="userHasRegistered() && !isHighestBidder()" class="form-group">
+        <div>
+          <span>The current asking price is: {{ getMinBid() }}</span>
         </div>
+        <div>
+          <label class="control-label">Make new bid</label>
+          <div class="input-group">
+            <span class="input-group-addon">$</span>
+            <input [(ngModel)]="newUserBid" type="number" [min]="getMinBid()" (blur)="ensureMinBid()" class="form-control">
+            <span class="input-group-btn">
+            <button (click)="bidOnItem()" [disabled]="newUserBidIsInvalid()" class="btn btn-default">Submit Bid</button>
+          </span>
+          </div>
+        </div>
+      </div>
+
+      <div *ngIf="!userHasRegistered()">
+        <span class="label label-default">You have not registered for this auction and cannot participate</span>
       </div>
     </div>
 
-    <div>
-      {{bids | json}}
+    <div *ngIf="isOwner()">
+      <div>
+        <span>Select new Asking price:</span>
+        <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control">
+      </div>
+
+      <div *ngIf="hasBidders()">
+        <div>
+          <span>User bids (click to accept one and set the new asking price):</span>
+        </div>
+        <ul class="list-group">
+          <li *ngFor="let bidder of getBidders()" (click)="acceptBid(bidder)" class="list-group-item" role="button">
+            <span class="badge">{{ bids[bidder] | currency:USD:true }}</span> {{ getBidderName(bidder) }}
+          </li>
+        </ul>
+      </div>
+
+      <div *ngIf="!hasBidders()">
+        <span class="label label-info">No bidders yet</span>
+      </div>
     </div>
 
   </div>
