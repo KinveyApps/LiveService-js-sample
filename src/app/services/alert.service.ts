@@ -14,4 +14,8 @@ export class AlertService {
   showError(msg: string, title?: string) {
     alert(msg);
   }
+
+  showMessage(msg: string) {
+    alert(msg);
+  }
 }

@@ -1,5 +1,6 @@
 export enum StreamMessageType {
-  Bid
+  Bid,
+  AuctionEnd
 }
 
 export interface StreamMessage {
@@ -9,4 +10,8 @@ export interface StreamMessage {
 
 export interface BidMessage extends StreamMessage {
   bid: number;
+}
+
+export interface AuctionEndMessage extends StreamMessage {
+  winner: string;
 }

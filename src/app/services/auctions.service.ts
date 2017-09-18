@@ -93,33 +93,35 @@ export class AuctionsService {
   subscribeForBids(auction: Auction, onBids: (bid: BidMessage) => void) {
     const promises = auction.participants.map(participantId => {
       return this._liveDataService.subscribeToStream(streamName, participantId, (msg: BidMessage) => {
-        onBids(msg);
+        if (msg.fromUser && msg.fromUser !== (auction._acl as any).creator) { // creator's messages are not bids
+          onBids(msg);
+        }
       });
     });
     return Promise.all(promises);
   }
 
-  subscribeForStatusUpdates(auction: Auction, userId: string, onUpdates: (bid: StreamMessage) => void) {
+  unsubscribeFromBids(auction: Auction) {
+    return this._unsubscribeFromParticipantStreams(auction);
+  }
+
+  subscribeForStatusUpdates(userId: string, onUpdates: (bid: StreamMessage) => void) {
     return this._liveDataService.subscribeToStream(streamName, userId, (msg) => {
-      if (msg.fromUser !== userId) { // don't update user on their own bids
+      if (msg.fromUser && msg.fromUser !== userId) { // don't update user on their own bids
         onUpdates(msg);
       }
     });
   }
 
+  unsubscribeFromStatusUpdates(userId: string) {
+    return this._liveDataService.unsubscribeFromStream(streamName, userId);
+  }
+
   finishAuction(auction: Auction) {
     const copy = cloneObject(auction);
     copy.end = new Date().toISOString();
-    const updatePromise = this._auctions.update(copy);
-    // const streamPromises = this.unsubscribeFromParticipantStreams(auction);
-    // return Promise.all(streamPromises.concat(updatePromise));
-    return updatePromise;
-  }
 
-  unsubscribeFromParticipantStreams(auction: Auction) {
-    return auction.participants.map(participantId => {
-      return this._liveDataService.unsubscribeFromStream(streamName, participantId);
-    });
+    return this._auctions.update(copy);
   }
 
   // cant handle multiple auctions
@@ -173,7 +175,17 @@ export class AuctionsService {
     };
     return this._liveDataService.publishToStream(streamName, bidderId, message);
   }
-  
+
+  sendMessageToParticipants(auction: Auction, message: StreamMessage) {
+    if (!auction.participants) {
+      return Promise.resolve<any>(null);
+    }
+    const promises = auction.participants.map((participantId) => {
+      return this._liveDataService.publishToStream(streamName, participantId, message);
+    });
+    return Promise.all(promises);
+  }
+
   acceptBidOnAuction(auction: Auction, bidderId: string, bid: number, newAskPrice: number) {
     const copy = cloneObject(auction);
     copy.currentBid = bid;
@@ -197,5 +209,15 @@ export class AuctionsService {
     }
 
     return errorMsg;
+  }
+
+  private _unsubscribeFromParticipantStreams(auction: Auction) {
+    if (!auction.participants) {
+      return Promise.resolve<any>(null);
+    }
+    const promises = auction.participants.map(participantId => {
+      return this._liveDataService.unsubscribeFromStream(streamName, participantId);
+    });
+    return Promise.all(promises);
   }
 }

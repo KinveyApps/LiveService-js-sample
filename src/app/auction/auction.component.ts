@@ -3,20 +3,27 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
-import { AuctionsService, UsersService, AlertService } from '../services';
-import { Auction, User, BidMessage, StreamMessage } from '../models';
-
 import { userIsOwner, constants } from '../shared';
+import { AuctionsService, UsersService, AlertService } from '../services';
+import {
+  Auction,
+  User,
+  BidMessage,
+  StreamMessage,
+  StreamMessageType,
+  AuctionEndMessage
+} from '../models';
 
 @Component({
   selector: 'auction',
   templateUrl: './auction.component.html',
   styleUrls: ['./auction.component.css']
 })
-export class AuctionComponent implements OnInit {
+export class AuctionComponent implements OnInit, OnDestroy {
   private _paramSub: Subscription;
   private _currentUser: User;
   private _bidderIdCounter = 1;
+  private _lastAcceptedBiderId: string = null
 
   newUserBid: number;
   newAskPrice: number;
@@ -47,13 +54,13 @@ export class AuctionComponent implements OnInit {
     this._paramSub = this._route.params.subscribe(p => {
       this.liveAuction = this._auctionsService.subscribeForAuctionAndUpdates(p.id);
       this.liveAuction.subscribe((auction) => {
-        const isUpdate = !!this.auction;
+        const isStateUpdate = !!this.auction && this._isStateUpdate(auction);
 
         this.auction = auction;
         this.newUserBid = this.getMinBid();
         this.newAskPrice = this.getMinBid();
 
-        if (!isUpdate) {
+        if (!this.isOwner() && isStateUpdate) {
           this._subForUserRoleData()
             .catch(e => e && this._alertService.showError(e.message));
         }
@@ -93,7 +100,7 @@ export class AuctionComponent implements OnInit {
   }
 
   newUserBidIsInvalid() {
-    return this.newUserBid < this.getMinBid() || this.newUserBid < this.userBid;
+    return this.newUserBid < this.getMinBid() || this.newUserBid <= this.userBid;
   }
 
   startAuction() {
@@ -126,6 +133,17 @@ export class AuctionComponent implements OnInit {
     const msg = `Finish auction for ${this.auction.item} and accept bid of $${this.auction.currentBid}?`;
     this._alertService.askConfirmation(msg)
       .then(() => this._auctionsService.finishAuction(this.auction))
+      .then(() => {
+        const msg: AuctionEndMessage = {
+          fromUser: (this.auction._acl as any).creator,
+          type: StreamMessageType.AuctionEnd,
+          winner: this._lastAcceptedBiderId
+        };
+        return this._auctionsService.sendMessageToParticipants(this.auction, msg);
+      })
+      .then(() => {
+        return this._auctionsService.unsubscribeFromStatusUpdates(this.currentUser._id);
+      })
       .catch(e => e && this._alertService.showError(e.message));
   }
 
@@ -142,6 +160,11 @@ export class AuctionComponent implements OnInit {
     }
     this._auctionsService.unsubscribeFromAuctionUpdates();
     // TODO: unsub from auction streams
+    if (this.isOwner()) {
+      this._unsubOwner();
+    } else {
+      this._unsubParticipant();
+    }
   }
 
   ensureMinBid() {
@@ -163,11 +186,15 @@ export class AuctionComponent implements OnInit {
 
   acceptBid(bidderId: string) {
     const acceptedBid = this.bids[bidderId];
-    if (this.newAskPrice < acceptedBid) {
-      return this._alertService.showError('New asking price cannot be lower than the accepted bid');
+    if (this.newAskPrice <= acceptedBid) {
+      return this._alertService.showError('New asking price must be higher than the accepted bid');
     }
-    
+    if (acceptedBid <= this.auction.currentBid) {
+      return;
+    }
+
     this._auctionsService.acceptBidOnAuction(this.auction, bidderId, acceptedBid, this.newAskPrice)
+      .then(() => this._lastAcceptedBiderId = bidderId)
       .catch(e => this._alertService.showError(e.message));
   }
 
@@ -198,22 +225,49 @@ export class AuctionComponent implements OnInit {
     console.log('subbing owner');
     return this._auctionsService.subscribeForBids(this.auction, (bidMsg) => {
       this._onReceivedBid(bidMsg);
-    });
+    })
+      .catch(e => this._alertService.showError(e.message));
+  }
+
+  private _unsubOwner() {
+    console.log('unsubbing owner');
+    this._auctionsService.unsubscribeFromBids(this.auction)
+      .catch(e => this._alertService.showError(e.message));
   }
 
   private _subParticipant() {
     console.log('subbing participant');
-    return this._auctionsService.subscribeForStatusUpdates(this.auction, this.currentUser._id, (update) => {
+    return this._auctionsService.subscribeForStatusUpdates(this.currentUser._id, (update) => {
       this._onAuctionStateUpdate(update);
     });
   }
 
+  private _unsubParticipant() {
+    console.log('unsubbing participant');
+    this._auctionsService.unsubscribeFromStatusUpdates(this.currentUser._id);
+  }
+
   private _onReceivedBid(bid: BidMessage) {
-    console.log('recieved bid', bid);
+    // console.log('recieved bid', bid);
     this.bids[bid.fromUser] = bid.bid;
   }
 
   private _onAuctionStateUpdate(msg: StreamMessage) {
     console.log('auction state change: ', msg);
+    if (msg.type !== StreamMessageType.AuctionEnd) {
+      return; // only handling auction end at this time
+    }
+    const endMsg = msg as AuctionEndMessage;
+    let outcomeText = 'Unfortunately, someone else won.';
+
+    if (endMsg.winner === this.currentUser._id) {
+      outcomeText = `You won ${this.auction.item}`;
+    }
+
+    this._alertService.showMessage(`The auction has ended. ${outcomeText}`);
+  }
+
+  private _isStateUpdate(newAuction: Auction) {
+    return this.auction.start !== newAuction.start|| this.auction.end !== newAuction.end;
   }
 }

@@ -1,9 +1,7 @@
 <main>
 
   <div *ngIf="auction">
-    <h1>Auction for {{auction.item}}</h1>
-
-    <div>
+    <section class="separate-section">
       <div *ngIf="isOwner()">
         <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
         <button *ngIf="isOngoing()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
@@ -11,23 +9,31 @@
       </div>
       <button *ngIf="!isOwner() && !hasStarted() && !userHasRegistered()" (click)="register()" class="btn btn-sm btn-success">Register for Auction</button>
       <button *ngIf="!isOwner() && !hasStarted() && userHasRegistered()" (click)="unregister()" class="btn btn-sm btn-danger">Unregister from Auction</button>
-    </div>
+    </section>
 
-    <div>
+    <section class="separate-section">
       <auction-details [auction]="liveAuction | async"></auction-details>
-      <span *ngIf="userHasRegistered() && !isOngoing()" class="label label-success">You have registered</span>
-    </div>
+      <span *ngIf="userHasRegistered() && !isOngoing() && !hasStarted()" class="label label-success">You have registered</span>
+      <span *ngIf="hasEnded()" class="label label-default">Auction has ended</span>
+    </section>
 
-    <div *ngIf="!isOwner() && isOngoing()">
+    <section *ngIf="!isOwner() && isOngoing()" class="separate-section">
       <div *ngIf="userBid || userBid === 0">
         <span>Your last bid:</span>
         <span class="label label-danger">{{ userBid | currency:USD:true }}</span>
+        <div *ngIf="isHighestBidder()">
+          <span class="label label-success">You are the highest bidder!</span>*
+          <div>
+            <small>*you may be sharing your position with one or more others</small>
+          </div>
+        </div>
       </div>
 
       <!-- TODO: move this to separate component directive -->
-      <div *ngIf="userHasRegistered() && !isHighestBidder()" class="form-group">
+      <div *ngIf="userHasRegistered() && !isHighestBidder()" class="form-group separate-section">
         <div>
-          <span>The current asking price is: {{ getMinBid() }}</span>
+          <span>The current asking price is:</span>
+          <span class="label label-default">{{ getMinBid() | currency:USD:true }}</span>
         </div>
         <div>
           <label class="control-label">Make new bid</label>
@@ -35,8 +41,8 @@
             <span class="input-group-addon">$</span>
             <input [(ngModel)]="newUserBid" type="number" [min]="getMinBid()" (blur)="ensureMinBid()" class="form-control">
             <span class="input-group-btn">
-            <button (click)="bidOnItem()" [disabled]="newUserBidIsInvalid()" class="btn btn-default">Submit Bid</button>
-          </span>
+              <button (click)="bidOnItem()" [disabled]="newUserBidIsInvalid()" class="btn btn-default">Submit Bid</button>
+            </span>
           </div>
         </div>
       </div>
@@ -44,15 +50,19 @@
       <div *ngIf="!userHasRegistered()">
         <span class="label label-default">You have not registered for this auction and cannot participate</span>
       </div>
-    </div>
+    </section>
 
-    <div *ngIf="isOwner()">
-      <div>
+    <section *ngIf="isOwner()" class="separate-section">
+      <div *ngIf="isOngoing()">
         <span>Select new Asking price:</span>
-        <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control">
+        <!-- <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control"> -->
+        <div class="input-group">
+          <span class="input-group-addon">$</span>
+          <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control">
+        </div>
       </div>
 
-      <div *ngIf="hasBidders()">
+      <div *ngIf="isOngoing() && hasBidders()">
         <div>
           <span>User bids (click to accept one and set the new asking price):</span>
         </div>
@@ -63,10 +73,10 @@
         </ul>
       </div>
 
-      <div *ngIf="!hasBidders()">
+      <div *ngIf="isOngoing() && !hasBidders()">
         <span class="label label-info">No bidders yet</span>
       </div>
-    </div>
+    </section>
 
   </div>
 

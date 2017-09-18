@@ -1,9 +1,7 @@
 <div *ngIf="auction">
 
-  <!-- <h2>{{auction.item}}</h2> -->
-
-  <!-- ongoing auction -->
-  <div *ngIf="!isOngoing()">
+  <!-- NOT ongoing auction -->
+  <section *ngIf="!isOngoing()">
     <div>
       <h2 class="text-center">Auction for "{{auction.item}}"</h2>
       <span>Bid: {{auction.currentBid | currency:USD:true}}</span>
@@ -11,17 +9,17 @@
     <div>
       <span>Participant count: {{getParticipants()}}</span>
     </div>
-  </div>
+  </section>
 
   <!-- ongoing auction -->
-  <div *ngIf="isOngoing()">
+  <section *ngIf="isOngoing()">
     <div *ngIf="isOwner()">
-      <span>Your auction!</span>
+      <span class="label label-success">You are the organizer of this auction!</span>
     </div>
     <span>Current Bidddd: {{auction.currentBid | currency:USD:true}}</span>
-  </div>
+  </section>
 
-  <div>
+  <section>
     <div *ngIf="auction.start">
       <span *ngIf="isOngoing()">Auction</span>
       <span>Started on {{auction.start | date:'medium'}}</span>
@@ -29,6 +27,6 @@
     <div *ngIf="auction.end">
       <span>Ended on {{auction.end | date:'medium'}}</span>
     </div>
-  </div>
+  </section>
 
 </div>

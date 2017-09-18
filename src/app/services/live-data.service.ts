@@ -60,6 +60,7 @@ export class LiveDataService {
     return stream.follow(streamOwnerId, {
       onMessage: (m) => {
         this._zone.run(() => {
+          console.log('rec stream msg:', m);
           receiver(m);
         });
       },
@@ -130,6 +131,7 @@ export class LiveDataService {
     return (collection as any).subscribe({
       onMessage: (msg) => {
         this._zone.run(() => {
+          console.log('rec collection msg:', msg);
           subj.next(msg);
         });
       },
