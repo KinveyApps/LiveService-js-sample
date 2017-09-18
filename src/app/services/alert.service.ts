@@ -23,4 +23,8 @@ export class AlertService {
     text += msg;
     alert(text);
   }
+
+  getUserInput(question: string) {
+    return prompt(question);
+  }
 }

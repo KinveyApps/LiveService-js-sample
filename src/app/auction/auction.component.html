@@ -53,21 +53,12 @@
     </section>
 
     <section *ngIf="isOwner()" class="separate-section">
-      <div *ngIf="isOngoing()">
-        <span>Select new Asking price:</span>
-        <!-- <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control"> -->
-        <div class="input-group">
-          <span class="input-group-addon">$</span>
-          <input [(ngModel)]="newAskPrice" type="number" [min]="getMinBid()" class="form-control">
-        </div>
-      </div>
-
       <div *ngIf="isOngoing() && hasBidders()">
         <div>
-          <span>User bids (click to accept one and set the new asking price):</span>
+          <span>User bids:</span>
         </div>
         <ul class="list-group">
-          <li *ngFor="let bidder of getBidders()" (click)="acceptBid(bidder)" class="list-group-item" role="button">
+          <li *ngFor="let bidder of getBidders()" class="list-group-item">
             <span class="badge">{{ bids[bidder] | currency:USD:true }}</span> {{ getBidderName(bidder) }}
           </li>
         </ul>

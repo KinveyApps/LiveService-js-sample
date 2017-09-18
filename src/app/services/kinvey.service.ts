@@ -26,7 +26,9 @@ export class KinveyService {
     return Kinvey.User.getActiveUser();
   }
 
-  userLookup(query: Kinvey.Query) {
+  userLookup(username: string) {
+    const query = this.getNewQuery()
+      .equalTo('username', username)
     return Kinvey.User.lookup(query);
   }
 

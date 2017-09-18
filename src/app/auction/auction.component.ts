@@ -3,7 +3,7 @@ import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
 
-import { userIsOwner, constants } from '../shared';
+import { userIsOwner, constants, isNumber } from '../shared';
 import { AuctionsService, UsersService, AlertService } from '../services';
 import {
   Auction,
@@ -11,7 +11,8 @@ import {
   BidMessage,
   StreamMessage,
   StreamMessageType,
-  AuctionEndMessage
+  AuctionEndMessage,
+  ErrorMessage
 } from '../models';
 
 @Component({
@@ -125,10 +126,6 @@ export class AuctionComponent implements OnInit, OnDestroy {
       .catch(e => e && this._alertService.showError(e.message));
   }
 
-  submitBid() {
-    this._auctionsService.bidOnAuction(this.auction, this.currentUser._id, this.newUserBid);
-  }
-
   finishAuction() {
     const msg = `Finish auction for ${this.auction.item} and accept bid of $${this.auction.currentBid}?`;
     this._alertService.askConfirmation(msg)
@@ -186,11 +183,15 @@ export class AuctionComponent implements OnInit, OnDestroy {
 
   acceptBid(bidderId: string) {
     const acceptedBid = this.bids[bidderId];
-    if (this.newAskPrice <= acceptedBid) {
-      return this._alertService.showError('New asking price must be higher than the accepted bid');
-    }
+
     if (acceptedBid <= this.auction.currentBid) {
-      return;
+      const msg: ErrorMessage = {
+        type: StreamMessageType.Error,
+        fromUser: this.currentUser._id,
+        error: 'Your bid was rejected. You were outbid, or it was invalid. Please try again'
+      };
+      return this._auctionsService.sendMessageToParticipant(bidderId, msg)
+        .catch(e => this._alertService.showError(e.message));
     }
 
     this._auctionsService.acceptBidOnAuction(this.auction, bidderId, acceptedBid, this.newAskPrice)
@@ -248,26 +249,41 @@ export class AuctionComponent implements OnInit, OnDestroy {
 
   private _onReceivedBid(bid: BidMessage) {
     this.bids[bid.fromUser] = bid.bid;
+    let newPrice = +this._alertService.getUserInput('Enter new asking price');
+    if (!isNumber(newPrice) || newPrice <= bid.bid || newPrice < this.auction.currentBid) {
+      newPrice = Math.max(bid.bid, this.auction.currentBid) + constants.auctionMinStep;
+      this._alertService.showMessage(`Using default: ${newPrice}`, 'Invalid new ask price');
+    }
+    this.newAskPrice = newPrice;
+    this.acceptBid(bid.fromUser);
   }
 
   private _onAuctionStateUpdate(msg: StreamMessage) {
-    if (msg.type !== StreamMessageType.AuctionEnd) {
-      return; // only handling auction end at this time
+    if (msg.type === StreamMessageType.AuctionEnd) {
+      this._handleAuctionEnd(msg as AuctionEndMessage);
+    } else if (msg.type === StreamMessageType.Error) {
+      this._handleErrorMessage(msg as ErrorMessage);
     }
-    const endMsg = msg as AuctionEndMessage;
+  }
+
+  private _handleAuctionEnd(endMsg: AuctionEndMessage) {
     let title = 'The auction has ended.';
     let text = 'Unfortunately, someone else won.';
 
     if (endMsg.winner === this.currentUser._id) {
       text = `You won ${this.auction.item}`;
     } else if (Array.isArray(endMsg.winner)) {
-      text = `You and ${endMsg.winner.length - 1} more people won.\nContact  for details on delivery`;
+      text = `You and ${endMsg.winner.length - 1} more people won.\nContact auction organizer for details on delivery`;
     } else if (!endMsg.winner) {
       title = 'The auction was cancelled';
       text = 'The auction organizer cancelled the auction.';
     }
 
     this._alertService.showMessage(text, title);
+  }
+
+  private _handleErrorMessage(msg: ErrorMessage) {
+    this._alertService.showError(msg.error);
   }
 
   private _isAuctionStartEvent(newAuction: Auction) {

@@ -9,6 +9,10 @@ export function isNonemptyString(o) {
   return typeof o === 'string' && o !== '';
 }
 
+export function isNumber(o: any) {
+  return typeof o === 'number' && !Number.isNaN(o);
+}
+
 // { _acl: { creator: string } }
 export function userIsOwner(user: User, entity: any);
 export function userIsOwner(userId: string, entity: any);

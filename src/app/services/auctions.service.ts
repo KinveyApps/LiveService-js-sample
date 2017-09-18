@@ -167,14 +167,7 @@ export class AuctionsService {
     return auction.participants && auction.participants.indexOf(userId) >= 0;
   }
 
-  // getParticipants(auction: Auction) {
-  //   const query = this._kinveyService.getNewQuery()
-  //     .contains('_id', auction.participants);
-  //   return this._usersService.getWithQuery(query);
-  // }
-
   bidOnAuction(auction: Auction, bidderId: string, bid: number) {
-    // const streamId: string = (auction._acl as any).creator;
     const message: BidMessage = {
       type: StreamMessageType.Bid,
       fromUser: bidderId,
@@ -183,12 +176,16 @@ export class AuctionsService {
     return this._liveDataService.publishToStream(streamName, bidderId, message);
   }
 
+  sendMessageToParticipant(userId: string, message: StreamMessage) {
+    return this._liveDataService.publishToStream(streamName, userId, message);
+  }
+
   sendMessageToParticipants(auction: Auction, message: StreamMessage) {
     if (!auction.participants) {
       return Promise.resolve<any>(null);
     }
     const promises = auction.participants.map((participantId) => {
-      return this._liveDataService.publishToStream(streamName, participantId, message);
+      return this.sendMessageToParticipant(participantId, message);
     });
     return Promise.all(promises);
   }
