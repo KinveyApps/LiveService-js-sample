@@ -1,4 +1,4 @@
-import { Injectable } from '@angular/core';
+import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/merge';
@@ -10,7 +10,7 @@ import { KinveyService } from './kinvey.service';
 import { UsersService } from './users.service';
 import { LiveDataService } from './live-data.service';
 import { Auction, BidMessage, StreamMessage, StreamMessageType } from '../models';
-import { isNonemptyString, cloneObject, wrapInNativePromise } from '../shared';
+import { isNonemptyString, cloneObject, makeObservableZoneAware } from '../shared';
 
 const collectionName = 'Auctions';
 const streamName = collectionName;
@@ -22,7 +22,8 @@ export class AuctionsService {
   constructor(
     private _kinveyService: KinveyService,
     private _liveDataService: LiveDataService,
-    private _usersService: UsersService
+    private _usersService: UsersService,
+    private _zone: NgZone
   ) {
     this._auctions = _kinveyService.getNewCollection<Auction>(collectionName);
   }
@@ -33,12 +34,12 @@ export class AuctionsService {
 
   getWithQuery(query?: Kinvey.Query) {
     const obs = this._auctions.find(query);
-    return wrapInNativePromise(obs);
+    return makeObservableZoneAware(this._zone, obs);
   }
 
   getById(id: string) {
     const obs = this._auctions.findById(id);
-    return wrapInNativePromise(obs);
+    return makeObservableZoneAware(this._zone, obs);
   }
 
   subscribeForAuctionAndUpdates(auctionId?: string): Observable<Auction>
@@ -59,10 +60,8 @@ export class AuctionsService {
     const query = this._kinveyService.getNewQuery()
       .contains('_id', interestedIn.map(f => f._id));
 
-    const prm = this.getWithQuery(query);
-    const firstValueObs = Observable.fromPromise(prm);
     const subObs = this.subscribeToAuctionCollection(interestedIn);
-    return firstValueObs.merge(subObs);
+    return this.getWithQuery(query).merge(subObs);
   }
 
   subscribeToAuctionCollection(interestedIn: { _id: string }[]) {

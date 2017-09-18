@@ -1,4 +1,7 @@
+import { NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/toPromise';
+import 'rxjs/add/observable/fromPromise';
 
 import { User } from '../models';
 
@@ -28,13 +31,43 @@ export function cloneObject<T>(o: T): T {
   return copy;
 }
 
-export function wrapInNativePromise<T>(promise: Promise<T>): Promise<T>
-export function wrapInNativePromise<T>(promise: Observable<T>): Promise<T>
-export function wrapInNativePromise<T>(asyncTask: Promise<T> | Observable<T>): Promise<T> {
-  const task = asyncTask as any;
-  const promise: Promise<any> = task.then ? task : task.toPromise();
-
-  return new Promise((resolve, reject) => {
-    promise.then(resolve, reject);
+export function makeObservableZoneAware<T>(zone: NgZone, obs: Observable<T>): Observable<T> {
+  return new Observable((observer) => {
+    obs.subscribe(n => {
+      zone.run(() => {
+        observer.next(n as any);
+      });
+    }, e => {
+      zone.run(() => {
+        observer.error(e);
+      });
+    }, () => {
+      observer.complete();
+    });
   });
+}
+
+export function makePromiseZoneAware<T>(zone: NgZone, promise: Promise<T>): Promise<T> {
+  return new Promise((resolve, reject) => {
+    promise.then(res => {
+      zone.run(() => {
+        resolve(res);
+      });
+    })
+      .catch(err => {
+        zone.run(() => {
+          reject(err);
+        });
+      });
+  });
+}
+
+export function ensureChangeDetection<T>(zone: NgZone, promise: Promise<T>)
+export function ensureChangeDetection<T>(zone: NgZone, observable: Observable<T>)
+export function ensureChangeDetection<T>(zone: NgZone, asyncTask: Promise<T> | Observable<T>): Promise<T> | Observable<T> {
+  if (asyncTask instanceof Promise) {
+    return makePromiseZoneAware(zone, asyncTask);
+  } else {
+    return makeObservableZoneAware(zone, asyncTask);
+  }
 }

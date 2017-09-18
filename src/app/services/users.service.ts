@@ -1,9 +1,7 @@
 import { Injectable } from '@angular/core';
-import { Observable } from 'rxjs/Observable';
 import { ReplaySubject } from 'rxjs/ReplaySubject';
 
 import { KinveyService } from './kinvey.service';
-import { wrapInNativePromise } from '../shared';
 import { Query } from '../models';
 
 @Injectable()
@@ -30,11 +28,6 @@ export class UsersService {
     return this._kinveyService.getActiveUser();
   }
 
-  getWithQuery(query: Query) {
-    const obs = this._kinveyService.userLookup(query);
-    return wrapInNativePromise(obs);
-  }
-
   loginUser(creds: { username: string, password: string }) {
     return this._kinveyService.loginUser(creds)
       .then(resp => {
@@ -49,10 +42,6 @@ export class UsersService {
   }
 
   authEvents() {
-    // return new Observable<boolean>((subscriber) => {
-    //   this._authEventsSub = subscriber;
-    //   this._notifAuthObservers(false);
-    // });
     if (!this._authEventsSub) {
       this._authEventsSub = new ReplaySubject<boolean>(1);
       this._authEventsSub.next(!!this._kinveyService.getActiveUser());

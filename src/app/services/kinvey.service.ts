@@ -73,20 +73,4 @@ export class KinveyService {
   getNewQuery() {
     return new Kinvey.Query();
   }
-
-  // getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity>)
-  // getLiveCollection(collection: string)
-  // getLiveCollection(collection: Kinvey.CacheStore<Kinvey.Entity> | string) {
-  //   if (typeof collection === 'string') {
-  //     collection = this.getNewCollection(collection);
-  //   }
-
-  //   (collection as any).subscribe({
-  //     onMessage: () => {
-  //       console.log(this);
-  //     }
-  //   });
-
-
-  // }
 }

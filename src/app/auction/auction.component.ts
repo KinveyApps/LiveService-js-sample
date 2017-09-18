@@ -54,13 +54,14 @@ export class AuctionComponent implements OnInit, OnDestroy {
     this._paramSub = this._route.params.subscribe(p => {
       this.liveAuction = this._auctionsService.subscribeForAuctionAndUpdates(p.id);
       this.liveAuction.subscribe((auction) => {
-        const isStateUpdate = !!this.auction && this._isStateUpdate(auction);
+        const isInitialized = !!this.auction;
+        const auctionStarted = isInitialized && this._isAuctionStartEvent(auction);
 
         this.auction = auction;
         this.newUserBid = this.getMinBid();
         this.newAskPrice = this.getMinBid();
 
-        if (!this.isOwner() && isStateUpdate) {
+        if (!isInitialized || (!this.isOwner() && auctionStarted)) {
           this._subForUserRoleData()
             .catch(e => e && this._alertService.showError(e.message));
         }
@@ -158,8 +159,9 @@ export class AuctionComponent implements OnInit, OnDestroy {
     if (this._paramSub) {
       this._paramSub.unsubscribe();
     }
+
     this._auctionsService.unsubscribeFromAuctionUpdates();
-    // TODO: unsub from auction streams
+
     if (this.isOwner()) {
       this._unsubOwner();
     } else {
@@ -178,7 +180,6 @@ export class AuctionComponent implements OnInit, OnDestroy {
   bidOnItem() {
     this._auctionsService.bidOnAuction(this.auction, this.currentUser._id, this.newUserBid)
       .then(() => {
-        console.log('successfully bid ' + this.newUserBid);
         this.userBid = this.newUserBid;
       })
       .catch(e => this._alertService.showError(e.message));
@@ -222,7 +223,6 @@ export class AuctionComponent implements OnInit, OnDestroy {
   }
 
   private _subOwner() {
-    console.log('subbing owner');
     return this._auctionsService.subscribeForBids(this.auction, (bidMsg) => {
       this._onReceivedBid(bidMsg);
     })
@@ -230,30 +230,25 @@ export class AuctionComponent implements OnInit, OnDestroy {
   }
 
   private _unsubOwner() {
-    console.log('unsubbing owner');
     this._auctionsService.unsubscribeFromBids(this.auction)
       .catch(e => this._alertService.showError(e.message));
   }
 
   private _subParticipant() {
-    console.log('subbing participant');
     return this._auctionsService.subscribeForStatusUpdates(this.currentUser._id, (update) => {
       this._onAuctionStateUpdate(update);
     });
   }
 
   private _unsubParticipant() {
-    console.log('unsubbing participant');
     this._auctionsService.unsubscribeFromStatusUpdates(this.currentUser._id);
   }
 
   private _onReceivedBid(bid: BidMessage) {
-    // console.log('recieved bid', bid);
     this.bids[bid.fromUser] = bid.bid;
   }
 
   private _onAuctionStateUpdate(msg: StreamMessage) {
-    console.log('auction state change: ', msg);
     if (msg.type !== StreamMessageType.AuctionEnd) {
       return; // only handling auction end at this time
     }
@@ -267,7 +262,7 @@ export class AuctionComponent implements OnInit, OnDestroy {
     this._alertService.showMessage(`The auction has ended. ${outcomeText}`);
   }
 
-  private _isStateUpdate(newAuction: Auction) {
-    return this.auction.start !== newAuction.start|| this.auction.end !== newAuction.end;
+  private _isAuctionStartEvent(newAuction: Auction) {
+    return this.auction.start !== newAuction.start;
   }
 }

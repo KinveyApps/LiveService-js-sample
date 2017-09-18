@@ -60,12 +60,11 @@ export class LiveDataService {
     return stream.follow(streamOwnerId, {
       onMessage: (m) => {
         this._zone.run(() => {
-          console.log('rec stream msg:', m);
           receiver(m);
         });
       },
-      onError: (e) => console.log(e),
-      onStatus: (s) => console.log(s)
+      onError: (e) => console.error(`Error on ${streamName} stream: `, e),
+      onStatus: (s) => console.log(`Status update on ${streamName} stream: `, s)
     });
   }
 
@@ -131,12 +130,11 @@ export class LiveDataService {
     return (collection as any).subscribe({
       onMessage: (msg) => {
         this._zone.run(() => {
-          console.log('rec collection msg:', msg);
           subj.next(msg);
         });
       },
-      onError: (e) => { console.log(`${collection.pathname} error: `, e); },
-      onStatus: (status) => { console.log(`${collection.pathname} status: `, status); }
+      onError: (e) => { console.error(`${collection.pathname} error: `, e); },
+      onStatus: (s) => { console.log(`${collection.pathname} status: `, s); }
     });
   }
 

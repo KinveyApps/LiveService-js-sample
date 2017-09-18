@@ -1,4 +1,4 @@
-import { Component, OnDestroy, NgZone, ChangeDetectorRef } from '@angular/core';
+import { Component, OnDestroy, NgZone } from '@angular/core';
 import { Router, NavigationEnd } from '@angular/router';
 
 import { Observable } from 'rxjs/Observable';
@@ -17,8 +17,7 @@ export class AppComponent implements OnDestroy {
     private _usersService: UsersService,
     private _alertService: AlertService,
     private _router: Router,
-    private _zone: NgZone,
-    private _cdRef: ChangeDetectorRef
+    private _zone: NgZone
   ) {
     this._router.events.subscribe(e => {
       this._zone.run(() => {
@@ -35,9 +34,5 @@ export class AppComponent implements OnDestroy {
 
   ngOnDestroy() {
     this._liveDataService.uninitialize();
-  }
-
-  detectChanges() {
-    this._cdRef.detectChanges();
   }
 }
