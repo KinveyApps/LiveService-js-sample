@@ -15,7 +15,12 @@ export class AlertService {
     alert(msg);
   }
 
-  showMessage(msg: string) {
-    alert(msg);
+  showMessage(msg: string, title?: string) {
+    let text = '';
+    if (title) {
+      text = title + '\n\n';
+    }
+    text += msg;
+    alert(text);
   }
 }

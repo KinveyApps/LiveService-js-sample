@@ -13,5 +13,5 @@ export interface BidMessage extends StreamMessage {
 }
 
 export interface AuctionEndMessage extends StreamMessage {
-  winner: string;
+  winner: string | string[];
 }

@@ -23,7 +23,7 @@ export class AuctionComponent implements OnInit, OnDestroy {
   private _paramSub: Subscription;
   private _currentUser: User;
   private _bidderIdCounter = 1;
-  private _lastAcceptedBiderId: string = null
+  private _lastAcceptedBiderId: string | string[] = null
 
   newUserBid: number;
   newAskPrice: number;
@@ -55,15 +55,14 @@ export class AuctionComponent implements OnInit, OnDestroy {
       this.liveAuction = this._auctionsService.subscribeForAuctionAndUpdates(p.id);
       this.liveAuction.subscribe((auction) => {
         const isInitialized = !!this.auction;
-        const auctionStarted = isInitialized && this._isAuctionStartEvent(auction);
+        const auctionJustStarted = isInitialized && this._isAuctionStartEvent(auction);
 
         this.auction = auction;
         this.newUserBid = this.getMinBid();
         this.newAskPrice = this.getMinBid();
 
-        if (!isInitialized || (!this.isOwner() && auctionStarted)) {
-          this._subForUserRoleData()
-            .catch(e => e && this._alertService.showError(e.message));
+        if ((this.isOngoing() && !isInitialized) || (auctionJustStarted && !this.isOwner())) {
+          this._subForUserRoleData();
         }
       });
     });
@@ -195,7 +194,10 @@ export class AuctionComponent implements OnInit, OnDestroy {
     }
 
     this._auctionsService.acceptBidOnAuction(this.auction, bidderId, acceptedBid, this.newAskPrice)
-      .then(() => this._lastAcceptedBiderId = bidderId)
+      .then(() => {
+        const bidders = this.getBidders().filter(b => this.bids[b] === acceptedBid);
+        this._lastAcceptedBiderId = (bidders && bidders.length === 1) ? bidders[0] : bidders;
+      })
       .catch(e => this._alertService.showError(e.message));
   }
 
@@ -253,13 +255,19 @@ export class AuctionComponent implements OnInit, OnDestroy {
       return; // only handling auction end at this time
     }
     const endMsg = msg as AuctionEndMessage;
-    let outcomeText = 'Unfortunately, someone else won.';
+    let title = 'The auction has ended.';
+    let text = 'Unfortunately, someone else won.';
 
     if (endMsg.winner === this.currentUser._id) {
-      outcomeText = `You won ${this.auction.item}`;
+      text = `You won ${this.auction.item}`;
+    } else if (Array.isArray(endMsg.winner)) {
+      text = `You and ${endMsg.winner.length - 1} more people won.\nContact  for details on delivery`;
+    } else if (!endMsg.winner) {
+      title = 'The auction was cancelled';
+      text = 'The auction organizer cancelled the auction.';
     }
 
-    this._alertService.showMessage(`The auction has ended. ${outcomeText}`);
+    this._alertService.showMessage(text, title);
   }
 
   private _isAuctionStartEvent(newAuction: Auction) {

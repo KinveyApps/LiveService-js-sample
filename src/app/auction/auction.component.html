@@ -30,7 +30,7 @@
       </div>
 
       <!-- TODO: move this to separate component directive -->
-      <div *ngIf="userHasRegistered() && !isHighestBidder()" class="form-group separate-section">
+      <div *ngIf="userHasRegistered()" class="form-group separate-section">
         <div>
           <span>The current asking price is:</span>
           <span class="label label-default">{{ getMinBid() | currency:USD:true }}</span>

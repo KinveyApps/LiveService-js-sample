@@ -1,6 +1,7 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
 import 'rxjs/add/observable/fromPromise';
+import 'rxjs/add/operator/toPromise';
 import 'rxjs/add/operator/merge';
 import 'rxjs/add/operator/map';
 
@@ -127,10 +128,17 @@ export class AuctionsService {
   registerForAuction(auction: Auction, userId: string) {
     const auctionOwnerId = (auction._acl as any).creator;
 
-    return this._liveDataService.setStreamACL(streamName, userId, {
-      publish: [userId, auctionOwnerId],
-      subscribe: [userId, auctionOwnerId]
-    })
+    return this.isSubbedForAnyAuction(userId)
+      .then((isRegistered) => {
+        if (isRegistered) {
+          const msg = 'You are already subbed for an auction.\nCurrently, you can only register for one auction at a time';
+          return Promise.reject({ message: msg });
+        }
+        return this._liveDataService.setStreamACL(streamName, userId, {
+          publish: [userId, auctionOwnerId],
+          subscribe: [userId, auctionOwnerId]
+        });
+      })
       .then(() => {
         const copy = cloneObject(auction);
         copy.participants = copy.participants || [];
@@ -190,6 +198,13 @@ export class AuctionsService {
     copy.currentBid = bid;
     copy.ask = newAskPrice;
     return this._auctions.update(copy);
+  }
+
+  isSubbedForAnyAuction(userId: string) {
+    const query = this._kinveyService.getNewQuery()
+      .equalTo('participants', userId);
+    return this.getWithQuery(query).toPromise()
+      .then((auctions) => auctions && auctions.length > 0);
   }
 
   validateAuctionData(auction: any) {
