@@ -3,7 +3,7 @@
   <div *ngIf="auction">
     <section class="separate-section">
       <div *ngIf="isOwner()">
-        <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success">Start Auction</button>
+        <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success" [disabled]="!hasParticipants()" [title]="hasParticipants() ? '' : 'There are no registered participants'">Start Auction</button>
         <button *ngIf="isOngoing()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
         <button [disabled]="isOngoing()" (click)="deleteAuction()" class="btn btn-sm btn-danger" [title]="isOngoing() ? 'Disabled while auction is ongoing' : ''">Delete Auction</button>
       </div>

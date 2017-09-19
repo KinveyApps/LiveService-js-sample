@@ -93,6 +93,10 @@ export class AuctionComponent implements OnInit, OnDestroy {
     return Object.keys(this.bids);
   }
 
+  hasParticipants() {
+    return this.auction && this.auction.participants && this.auction.participants.length;
+  }
+
   getBidderName(bidderId: string) {
     if (!this.bidderNames[bidderId]) {
       this.bidderNames[bidderId] = `Bidder ${this._bidderIdCounter++}`;
@@ -226,6 +230,10 @@ export class AuctionComponent implements OnInit, OnDestroy {
   }
 
   private _subOwner() {
+    if (!this.hasParticipants()) {
+      return Promise.resolve();
+    }
+
     return this._auctionsService.subscribeForBids(this.auction, (bidMsg) => {
       this._onReceivedBid(bidMsg);
     })
