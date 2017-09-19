@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
-import { Stream } from '../models';
+import { Stream, NetworkStore } from '../models';
 
 @Injectable()
 export class KinveyService {
@@ -14,22 +14,8 @@ export class KinveyService {
     });
   }
 
-  private get LiveService() {
-    return (Kinvey as any).LiveService;
-  }
-
-  // invokeCustomEndpoint(endpoint: string, body: any) {
-  //   return Kinvey.CustomEndpoint.execute(endpoint, body);
-  // }
-
   getActiveUser() {
     return Kinvey.User.getActiveUser();
-  }
-
-  userLookup(username: string) {
-    const query = this.getNewQuery()
-      .equalTo('username', username)
-    return Kinvey.User.lookup(query);
   }
 
   loginUser(creds: { username: string, password: string }) {
@@ -45,11 +31,11 @@ export class KinveyService {
   }
 
   liveServiceInitialized(): boolean {
-    return this.LiveService.isInitialized();
+    return Kinvey.LiveService.isInitialized();
   }
 
   initLiveService(): Promise<void> {
-    const user = Kinvey.User.getActiveUser() as any;
+    const user = Kinvey.User.getActiveUser();
     if (user) {
       return user.registerForLiveService();
     }
@@ -57,7 +43,7 @@ export class KinveyService {
   }
 
   uninitializeLiveService() {
-    const user = Kinvey.User.getActiveUser() as any;
+    const user = Kinvey.User.getActiveUser();
     if (user) {
       return user.unregisterFromLiveService();
     }
@@ -65,11 +51,11 @@ export class KinveyService {
   }
 
   getNewStream(name: string): Stream {
-    return new (Kinvey as any).LiveService.Stream(name);
+    return new Kinvey.LiveService.Stream(name);
   }
 
   getNewCollection<T extends Kinvey.Entity>(name: string) {
-    return Kinvey.DataStore.collection<T>(name, Kinvey.DataStoreType.Network); // parametarize type?
+    return Kinvey.DataStore.collection<T>(name, Kinvey.DataStoreType.Network) as NetworkStore<T>;
   }
 
   getNewQuery() {

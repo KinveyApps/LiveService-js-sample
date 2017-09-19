@@ -28,10 +28,6 @@ export class UsersService {
     return this._kinveyService.getActiveUser();
   }
 
-  getUser(username: string) {
-    return this._kinveyService.userLookup(username);
-  }
-
   loginUser(creds: { username: string, password: string }) {
     return this._kinveyService.loginUser(creds)
       .then(resp => {
