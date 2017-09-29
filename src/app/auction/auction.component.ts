@@ -148,13 +148,6 @@ export class AuctionComponent implements OnInit, OnDestroy {
       .catch(e => e && this._alertService.showError(e.message));
   }
 
-  deleteAuction() {
-    this._alertService.askConfirmation('Are you sure you want to delete this auction?')
-      .then(() => this._auctionsService.delete(this.auction._id))
-      .then(() => this._router.navigateByUrl('/home'))
-      .catch(e => e && this._alertService.showError(e.message));
-  }
-
   ngOnDestroy() {
     if (this._paramSub) {
       this._paramSub.unsubscribe();
@@ -257,12 +250,7 @@ export class AuctionComponent implements OnInit, OnDestroy {
 
   private _onReceivedBid(bid: BidMessage) {
     this.bids[bid.fromUser] = bid.bid;
-    let newPrice = +this._alertService.getUserInput('Enter new asking price');
-    if (!isNumber(newPrice) || newPrice <= bid.bid || newPrice < this.auction.currentBid) {
-      newPrice = Math.max(bid.bid, this.auction.currentBid) + constants.auctionMinStep;
-      this._alertService.showMessage(`Using default: ${newPrice}`, 'Invalid new ask price');
-    }
-    this.newAskPrice = newPrice;
+    this.newAskPrice = Math.max(bid.bid, this.auction.currentBid) + constants.auctionMinStep;
     this.acceptBid(bid.fromUser);
   }
 
@@ -279,9 +267,9 @@ export class AuctionComponent implements OnInit, OnDestroy {
     let text = 'Unfortunately, someone else won.';
 
     if (endMsg.winner === this.currentUser._id) {
-      text = `You won ${this.auction.item}`;
+      text = `Congratulations! You won ${this.auction.item}`;
     } else if (Array.isArray(endMsg.winner)) {
-      text = `You and ${endMsg.winner.length - 1} more people won.\nContact auction organizer for details on delivery`;
+      text = `Congratulations! You and ${endMsg.winner.length - 1} more people won.\nContact auction organizer for details on delivery`;
     } else if (!endMsg.winner) {
       title = 'The auction was cancelled';
       text = 'The auction organizer cancelled the auction.';

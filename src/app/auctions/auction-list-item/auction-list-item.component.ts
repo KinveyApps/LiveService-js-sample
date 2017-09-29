@@ -15,4 +15,8 @@ export class AuctionListItemComponent {
   constructor(
     private _auctionsService: AuctionsService
   ) { }
+
+  getParticipantCount(auction: Auction) {
+    return (auction && auction.participants) ? auction.participants.length : 0;
+  }
 }

@@ -19,23 +19,40 @@ export class LiveDataService {
     private _zone: NgZone
   ) { }
 
-  subscribeForCollectionUpdates<T extends Entity>(collectionName: string, interestedIn?: Entity[]): Observable<T> {
-    // TODO: check why this was causing problems and if it's necessary
-    // if (!this.isSubbedForCollection(collectionName)) {
-    this._subForCollection(collectionName);
-    // }
+  keepCollectionUpdated<T extends Entity>(collectionName: string, initialCollection: Observable<T[]>, interestedIn?: { _id: string }[]) {
+    return new Observable<T[]>((observer: any) => {
+      let collection: T[] = null;
 
-    return (this.updatesByCollection[collectionName].asObservable() as Observable<T>)
-      .filter((item) => {
-        return !interestedIn || interestedIn.some(o => o._id === item._id);
+      initialCollection.subscribe((initialCollection) => {
+        collection = initialCollection;
+        observer.next(collection);
+
+        this.subscribeForCollectionUpdates<T>(collectionName, interestedIn).subscribe((entityUpdate) => {
+          const ind = collection.findIndex(e => e._id === entityUpdate._id);
+          if (ind > -1) {
+            this._zone.run(() => {
+              collection[ind] = entityUpdate;
+            });
+          } else {
+            collection.push(entityUpdate);
+          }
+          observer.next(collection);
+        });
       });
+    });
+  }
+
+  subscribeForCollectionUpdates<T extends Entity>(collectionName: string, interestedIn?: Entity[]): Observable<T> {
+    this._subForCollection(collectionName);
+    const obs = this.updatesByCollection[collectionName].asObservable() as Observable<T>;
+
+    return obs.filter((item) => {
+      return !interestedIn || interestedIn.some(o => o._id === item._id);
+    });
   }
 
   unsubscribeFromCollection(collectionName: string) {
-    // if (this.isSubbedForCollection(collectionName)) {
     return this._unsubFromCollection(collectionName);
-    // }
-    // return Promise.resolve();
   }
 
   initialize() {
@@ -45,15 +62,6 @@ export class LiveDataService {
   uninitialize() {
     return this._kinveyService.uninitializeLiveService();
   }
-
-  // isSubbedForCollection(collectionName: string) {
-  //   return !!this.updatesByCollection[collectionName];
-  // }
-
-  // subscribeToStream(streamName: string) {
-  //   const stream = this._kinveyService.getNewStream(streamName);
-  //   this.streamsById[streamName] = stream;
-  // }
 
   subscribeToStream(streamName: string, streamOwnerId: string, receiver: (msg: StreamMessage) => void) {
     const stream = this._getStream(streamName);
@@ -85,23 +93,11 @@ export class LiveDataService {
   }
 
   private _getStream(name: string) {
-    // is this even necessary?
     if (!this.streamsById[name]) {
       this.streamsById[name] = this._kinveyService.getNewStream(name);
     }
     return this.streamsById[name];
   }
-
-  // private _isSubbed(name: string) {
-  //   return !!this._getSubbedStream(name);
-  // }
-
-  // private _ensureStream(streamName: string, ownerId: string) {
-  //   if (!this._isSubbed(ownerId)) {
-  //     this.subscribeToStream(streamName, ownerId);
-  //   }
-  //   return this._getSubbedStream(ownerId);
-  // }
 
   private _ensureLiveServiceInit() {
     let promise = Promise.resolve();
@@ -127,7 +123,7 @@ export class LiveDataService {
   }
 
   private _subForLiveData(collection: CacheStore<Entity>, subj: ReplaySubject<Entity>) {
-    return (collection as any).subscribe({
+    return collection.subscribe({
       onMessage: (msg) => {
         this._zone.run(() => {
           subj.next(msg);
@@ -149,6 +145,6 @@ export class LiveDataService {
   }
 
   private _unsubFromLiveData(collection: CacheStore<Entity>) {
-    return (collection as any).unsubscribe();
+    return collection.unsubscribe();
   }
 }

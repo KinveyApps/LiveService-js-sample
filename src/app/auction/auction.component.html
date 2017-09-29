@@ -5,7 +5,6 @@
       <div *ngIf="isOwner()">
         <button *ngIf="!hasStarted() && !hasEnded()" (click)="startAuction()" class="btn btn-sm btn-success" [disabled]="!hasParticipants()" [title]="hasParticipants() ? '' : 'There are no registered participants'">Start Auction</button>
         <button *ngIf="isOngoing()" (click)="finishAuction()" class="btn btn-sm btn-default">Finish Auction</button>
-        <button [disabled]="isOngoing()" (click)="deleteAuction()" class="btn btn-sm btn-danger" [title]="isOngoing() ? 'Disabled while auction is ongoing' : ''">Delete Auction</button>
       </div>
       <button *ngIf="!isOwner() && !hasStarted() && !userHasRegistered()" (click)="register()" class="btn btn-sm btn-success">Register for Auction</button>
       <button *ngIf="!isOwner() && !hasStarted() && userHasRegistered()" (click)="unregister()" class="btn btn-sm btn-danger">Unregister from Auction</button>
@@ -29,7 +28,7 @@
         </div>
       </div>
 
-      <!-- TODO: move this to separate component directive -->
+      <!-- TODO: move this to a component -->
       <div *ngIf="userHasRegistered()" class="form-group separate-section">
         <div>
           <span>The current asking price is:</span>
@@ -41,7 +40,7 @@
             <span class="input-group-addon">$</span>
             <input [(ngModel)]="newUserBid" type="number" [min]="getMinBid()" (blur)="ensureMinBid()" class="form-control">
             <span class="input-group-btn">
-              <button (click)="bidOnItem()" [disabled]="newUserBidIsInvalid()" class="btn btn-default">Submit Bid</button>
+              <button (click)="bidOnItem()" [disabled]="newUserBidIsInvalid() || isHighestBidder()" [title]="isHighestBidder() ? 'You are the highest bidder' : ''" class="btn btn-default">Submit Bid</button>
             </span>
           </div>
         </div>

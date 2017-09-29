@@ -1,6 +1,5 @@
-<!-- <tr class="auction"> -->
-  <td><span>{{auction.item}}</span></td>
-  <td><span>{{auction.start | date}}</span></td>
-  <td><span>{{auction.end | date}}</span></td>
-  <td><span>{{auction.currentBid | currency:USD:true}}</span></td>
-<!-- </tr> -->
+<td><span>{{auction.item}}</span></td>
+<td><span>{{getParticipantCount(auction)}}</span></td>
+<td><span>{{auction.currentBid | currency:USD:true}}</span></td>
+<td><span>{{auction.start | date}}</span></td>
+<td><span>{{auction.end | date}}</span></td>

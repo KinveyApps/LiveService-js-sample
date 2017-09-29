@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="utf-8">
+
+  <style>
+    .row {
+      margin: 15px 0;
+    }
+
+    .col {
+      display: inline-block;
+      width: 49%;
+    }
+  </style>
+
+  <!-- <script src="https://download.kinvey.com/js/kinvey-html5-sdk-3.9.0.js"></script> -->
+  <script src="/html5-sdk/dist/kinvey-html5-sdk.js"></script>
+
+</head>
+
+<body>
+
+  <div class="col">
+    <div class="row stream">
+      <div class="row">
+        <h4>User-to-user communication</h4>
+      </div>
+
+      <div class="row">
+        <button onclick="initLiveService()">Init LiveService</button>
+      </div>
+      <div class="row">
+        <button onclick="getAllSubstreams()">Get substreams</button>
+        <button onclick="getACL('594a76b3fb78dc85415757b2')">Get ACL for username</button>
+        <button onclick="getACL('5989dcc67d3326c22a5a64d7')">Get ACL for admin</button>
+      </div>
+      <div class="row">
+        <button onclick="send('594a76b3fb78dc85415757b2')">Send to username</button>
+        <button onclick="send('5989dcc67d3326c22a5a64d7')">Send to admin</button>
+      </div>
+      <div class="row">
+        <button onclick="subFor('594a76b3fb78dc85415757b2')">Subscribe for username</button>
+        <button onclick="subFor('5989dcc67d3326c22a5a64d7')">Subscribe for admin</button>
+      </div>
+      <div class="row">
+        <button onclick="unsubFor('594a76b3fb78dc85415757b2')">Unsub from username</button>
+        <button onclick="unsubFor('5989dcc67d3326c22a5a64d7')">Unsub from admin</button>
+      </div>
+      <div class="row">
+        <button onclick="subForWrongChannel()">Sub for wrong channel</button>
+      </div>
+      <div class="row">
+        <button onclick="logIn()">Log in</button>
+        <button onclick="logOut()">Log out</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="col">
+    <div class="row collection">
+      <div class="row">
+        <h4>Collections</h4>
+      </div>
+
+      <div class="row">
+        <button onclick="subscribe()">Subscribe</button>
+        <button onclick="unsubscribe()">Unsubscribe</button>
+      </div>
+
+      <div class="row">
+        <button onclick="attachStatusEventsListener()">Listen for Status events</button>
+      </div>
+
+      <div class="row">
+        <button onclick="createItem()">Create item</button>
+      </div>
+    </div>
+  </div>
+
+
+  <script>
+    let collection;
+
+    function createItem() {
+      collection.save({ test: new Date() });
+    }
+
+    function subscribe() {
+      collection.subscribe({
+        onMessage: (m) => console.log('collection update:', m),
+        onStatus: (m) => console.log('status:', m),
+        onError: (m) => console.log('error', m)
+      })
+        .then((resp) => {
+          console.log('subbed', resp);
+        })
+        .catch(err => console.error(err));
+    }
+
+    function unsubscribe() {
+      collection.unsubscribe()
+        .then((resp) => {
+          console.log('UNsubbed', resp);
+        })
+        .catch(err => console.error(err));
+    }
+  </script>
+
+  <script>
+    let stream;
+
+    function send(id) {
+      stream.send(id, { sentBy: userCreds.username })
+        .then((sendResp) => {
+          console.log('sent to ' + id);
+        })
+        .catch((sendErr) => {
+          console.log('send err: ', sendErr);
+        });
+    }
+
+    function subForWrongChannel() {
+      stream.follow('1234567', {})
+        .catch(e => console.log(e));;
+    }
+
+    function getParameterByName(name, url) {
+      if (!url) url = window.location.href;
+      name = name.replace(/[\[\]]/g, "\\$&");
+      let regex = new RegExp("[?&]" + name + "(=([^&#]*)|&|#|$)"),
+        results = regex.exec(url);
+      if (!results) return null;
+      if (!results[2]) return '';
+      return decodeURIComponent(results[2].replace(/\+/g, " "));
+    }
+
+    function logIn() {
+      Kinvey.User.login(userCreds)
+        .catch(e => console.log(e));
+    }
+
+    function logOut() {
+      Kinvey.User.logout()
+        .catch(e => console.log(e));
+    }
+
+    function initLiveService() {
+      Kinvey.User.getActiveUser()
+        .registerForLiveService()
+        .then(() => console.log('registered for live service'))
+        .catch(err => console.error(err));
+    }
+
+    function subFor(userId) {
+      stream.follow(userId, {
+        onMessage: (msg) => console.log('received msg', msg),
+        onStatus: (status) => console.log('status', status),
+        onError: (err) => console.error('err', err)
+      })
+        .then(() => {
+          console.log('listening for ' + otherUserId);
+        })
+        .catch(err => console.error(err));
+    }
+
+    function unsubFor(userId) {
+      stream.unfollow(userId)
+        .then(() => {
+          console.log('stopped listening for ' + otherUserId);
+        })
+        .catch(err => console.error(err));
+    }
+
+    function getAllSubstreams() {
+      stream.getSubstreams()
+        .then((substreams) => {
+          console.log('substreams', substreams);
+        })
+        .catch(err => console.error(err));
+    }
+
+    function getACL(userId) {
+      stream.getACL(userId)
+        .then(acl => console.log('acl', acl))
+        .catch(err => console.error(err));
+    }
+
+    function attachStatusEventsListener() {
+      Kinvey.LiveService.onConnectionStatusUpdates((status) => {
+        console.log('status event: ', status);
+      });
+    }
+
+    const otherUserId = getParameterByName('u') != '1' ? '5989dcc67d3326c22a5a64d7' : '594a76b3fb78dc85415757b2';
+    const userCreds = getParameterByName('a') == '1' ? { username: 'admin', password: 'admin' } : { username: 'username', password: 'qweqwe' };
+    let currUser;
+
+    Kinvey.initialize({
+      appKey: 'kid_SJsSMfnGZ',
+      appSecret: 'ea0cc05888be46b2b1ff729b2f7de3d8'
+    })
+      .then((activeUser) => {
+        let promise = Promise.resolve(activeUser);
+        if (!activeUser) {
+          promise = Kinvey.User.login(userCreds);
+        }
+        return promise;
+      })
+      .then((activeUser) => {
+        currUser = activeUser;
+        stream = new Kinvey.LiveService.Stream('Test');
+        collection = Kinvey.DataStore.collection('Events', Kinvey.DataStoreType.Network);
+      })
+      .then(() => {
+        if (currUser._id !== '594a76b3fb78dc85415757b2') {
+          return;
+        }
+
+        const acl = {
+          subscribe: [currUser._id, otherUserId],
+          publish: [currUser._id, otherUserId]
+        };
+
+        return stream.setACL(currUser._id, new Kinvey.LiveService.Stream.StreamACL(acl));
+      })
+      .catch((err) => {
+        console.error(err);
+      });
+  </script>
+</body>
+
+</html>

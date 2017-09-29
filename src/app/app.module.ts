@@ -7,12 +7,16 @@ import { FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { BrowserModule } from '@angular/platform-browser';
 import { HttpModule } from '@angular/http';
 
-import { AuthGuard } from './shared';
-import { UnauthGuard } from './shared';
-import { KinveyService, AlertService, AuctionsService, UsersService, LiveDataService } from './services';
+import { AuthGuard, UnauthGuard } from './shared';
+import {
+  KinveyService,
+  AlertService,
+  AuctionsService,
+  UsersService,
+  LiveDataService
+} from './services';
 
 import { LoginComponent } from './login/login.component';
-import { JoinComponent } from './join/join.component';
 import { AuctionComponent } from './auction/auction.component';
 import { HomeComponent } from './home/home.component';
 import { NewAuctionComponent } from './new-auction/new-auction.component';
@@ -30,7 +34,6 @@ import {
     AuctionComponent,
     NewAuctionComponent,
     LoginComponent,
-    JoinComponent,
     SignupComponent,
     AuctionDetailsComponent,
     AuctionListItemComponent,

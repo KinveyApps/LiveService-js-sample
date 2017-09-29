@@ -1,28 +1,20 @@
 <h1>All Auctions</h1>
 
 <main>
-  <!-- <button (click)="detect()">Test</button> -->
-
   <table class="auction-list table table-striped table-hover">
     <thead>
       <tr>
         <th>Auctioned Item</th>
-        <!-- <th>Auction Start</th>
-        <th>Auction End</th> -->
         <th>Participant count</th>
         <th>Current Bid</th>
+        <th>Auction Started</th>
+        <th>Auction Ended</th>
       </tr>
     </thead>
 
     <tbody>
-      <tr class="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)">
-        <td><span>{{auction.item}}</span></td>
-        <!-- <td><span>{{auction.start | date}}</span></td>
-        <td><span>{{auction.end | date}}</span></td> -->
-        <td><span>{{getParticipantCount(auction)}}</span></td>
-        <td><span>{{auction.currentBid | currency:USD:true}}</span></td>
-      </tr>
-      <!-- <tr class="auction" auction-list-item [auction]="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)"></tr> -->
+      <!--  [ngClass]="{ 'text-danger': hasEnded(auction), 'text-success': !hasStarted(auction), 'text-warning': isOngoing(auction) }" -->
+      <tr role="button" auction-list-item [auction]="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)"></tr>
     </tbody>
   </table>
 </main>

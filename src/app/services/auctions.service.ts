@@ -1,9 +1,11 @@
 import { Injectable, NgZone } from '@angular/core';
 import { Observable } from 'rxjs/Observable';
+import { Subscriber } from 'rxjs/Subscriber';
 import 'rxjs/add/observable/fromPromise';
 import 'rxjs/add/operator/toPromise';
 import 'rxjs/add/operator/merge';
 import 'rxjs/add/operator/map';
+import 'rxjs/add/operator/do';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
 
@@ -57,12 +59,14 @@ export class AuctionsService {
       });
   }
 
-  subscribeToAuctionCollectionWithInitialValue(interestedIn: { _id: string }[]) {
-    const query = this._kinveyService.getNewQuery()
-      .contains('_id', interestedIn.map(f => f._id));
+  subscribeToAuctionCollectionWithInitialValue(interestedIn?: { _id: string }[]) {
+    const query = this._kinveyService.getNewQuery();
+    if (interestedIn && interestedIn.length) {
+      query.contains('_id', interestedIn.map(f => f._id));
+    }
 
-    const subObs = this.subscribeToAuctionCollection(interestedIn);
-    return this.getWithQuery(query).merge(subObs);
+    const initialArr = this.getWithQuery(query);
+    return this._liveDataService.keepCollectionUpdated(collectionName, initialArr, interestedIn);
   }
 
   subscribeToAuctionCollection(interestedIn: { _id: string }[]) {
@@ -77,17 +81,10 @@ export class AuctionsService {
     return this._auctions.save(auction);
   }
 
-  delete(auctionId: string) {
-    return this._auctions.removeById(auctionId);
-  }
-
-  startAuction(auction: Auction /* , onBids: (bid: BidMessage) => void */) {
+  startAuction(auction: Auction) {
     const copy = cloneObject(auction);
     copy.start = new Date().toISOString();
-    const updatePromise = this._auctions.update(copy);
-    // const streamPromises = this.subscribeToParticipantStreams(auction, onBids);
-    // return Promise.all(streamPromises.concat(updatePromise));
-    return updatePromise;
+    return this._auctions.update(copy);
   }
 
   subscribeForBids(auction: Auction, onBids: (bid: BidMessage) => void) {
@@ -199,6 +196,8 @@ export class AuctionsService {
 
   isSubbedForAnyAuction(userId: string) {
     const query = this._kinveyService.getNewQuery()
+      .and()
+      .exists('end', false)
       .equalTo('participants', userId);
     return this.getWithQuery(query).toPromise()
       .then((auctions) => auctions && auctions.length > 0);

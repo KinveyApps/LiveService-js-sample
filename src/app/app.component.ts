@@ -1,7 +1,5 @@
 import { Component, OnDestroy, NgZone } from '@angular/core';
-import { Router, NavigationEnd } from '@angular/router';
-
-import { Observable } from 'rxjs/Observable';
+import { Router } from '@angular/router';
 
 import { UsersService, AlertService, LiveDataService } from './services';
 

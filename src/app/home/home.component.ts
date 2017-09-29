@@ -12,7 +12,7 @@ import { Auction } from '../models';
   templateUrl: './home.component.html'
 })
 export class HomeComponent {
-  auctions: any;
+  auctions: Observable<Auction[]>;
 
   constructor(
     private _kinveyService: KinveyService,
@@ -23,7 +23,7 @@ export class HomeComponent {
   ) { }
 
   ngOnInit() {
-    this.auctions = this._auctionsService.getAll();
+    this.auctions = this._auctionsService.subscribeToAuctionCollectionWithInitialValue() as Observable<Auction[]>;
   }
 
   viewDetails(id: string) {
@@ -33,5 +33,17 @@ export class HomeComponent {
   getParticipantCount(auction: Auction) {
     const participants = auction.participants || [];
     return participants.length;
+  }
+
+  hasStarted(auction: Auction) {
+    return auction.start && !auction.end;
+  }
+
+  hasEnded(auction: Auction) {
+    return auction.start && auction.end;
+  }
+
+  isOngoing(auction: Auction) {
+    return this.hasStarted(auction) && !this.hasEnded(auction);
   }
 }
