@@ -2,6 +2,7 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { Router, ActivatedRoute } from '@angular/router';
 import { Observable } from 'rxjs/Observable';
 import { Subscription } from 'rxjs/Subscription';
+import 'rxjs/add/operator/do';
 
 import { userIsOwner, constants, isNumber } from '../shared';
 import { AuctionsService, UsersService, AlertService } from '../services';
@@ -70,7 +71,7 @@ export class AuctionComponent implements OnInit, OnDestroy {
   }
 
   isOwner() {
-    return userIsOwner(this.currentUser, this.auction);
+    return this.auction && userIsOwner(this.currentUser, this.auction);
   }
 
   hasStarted() {

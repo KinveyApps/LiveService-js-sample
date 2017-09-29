@@ -12,6 +12,8 @@ export class AlertService {
   }
 
   showError(msg: string, title?: string) {
+    title = title || 'Error';
+    msg = `${title}\n\n${msg}`;
     alert(msg);
   }
 

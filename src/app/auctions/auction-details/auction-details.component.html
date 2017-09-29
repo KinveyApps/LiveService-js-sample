@@ -6,17 +6,20 @@
       <h2 class="text-center">Auction for "{{ auction.item }}"</h2>
       Bid: <span class="label label-primary">{{ auction.currentBid | currency:USD:true }}</span>
     </div>
-    <div>
-      Participant count: <span class="label label-warning">{{ getParticipants() }}</span>
-    </div>
   </section>
 
   <!-- ongoing auction -->
   <section *ngIf="isOngoing()">
     <div *ngIf="isOwner()">
-      <span class="label label-success">You are the organizer of this auction!</span>
+      <span class="label label-warning">You are the organizer of this auction!</span>
     </div>
     <span>Current Bid: {{ auction.currentBid | currency:USD:true }}</span>
+  </section>
+
+  <section>
+    <div>
+      Participant count: <span class="label label-warning">{{ getParticipants() }}</span>
+    </div>
   </section>
 
   <section>

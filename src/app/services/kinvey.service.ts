@@ -9,18 +9,14 @@ export class KinveyService {
 
   constructor() {
     Kinvey.initialize({
-      appKey: 'kid_SJsSMfnGZ',
-      appSecret: 'ea0cc05888be46b2b1ff729b2f7de3d8'
+      appKey: 'kid_rkVww13j-',
+      appSecret: 'bd3513fa3ad04db884b0368d1d896c0d'
     });
   }
 
   private get LiveService() {
     return (Kinvey as any).LiveService;
   }
-
-  // invokeCustomEndpoint(endpoint: string, body: any) {
-  //   return Kinvey.CustomEndpoint.execute(endpoint, body);
-  // }
 
   getActiveUser() {
     return Kinvey.User.getActiveUser();
@@ -32,6 +28,7 @@ export class KinveyService {
     return Kinvey.User.lookup(query);
   }
 
+  // TODO: move user functions to users service
   loginUser(creds: { username: string, password: string }) {
     return Kinvey.User.login(creds.username, creds.password);
   }
@@ -42,10 +39,6 @@ export class KinveyService {
 
   signUpUser(creds: { username: string, password: string }) {
     return Kinvey.User.signup(creds);
-  }
-
-  liveServiceInitialized(): boolean {
-    return this.LiveService.isInitialized();
   }
 
   initLiveService(): Promise<void> {

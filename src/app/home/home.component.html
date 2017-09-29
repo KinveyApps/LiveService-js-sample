@@ -13,8 +13,12 @@
     </thead>
 
     <tbody>
-      <!--  [ngClass]="{ 'text-danger': hasEnded(auction), 'text-success': !hasStarted(auction), 'text-warning': isOngoing(auction) }" -->
       <tr role="button" auction-list-item [auction]="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)"></tr>
+      <tr *ngIf="hasNoAuctions">
+        <td colspan="5" class="text-center">
+          <span class="label label-info">No auctions yet.</span>
+        </td>
+      </tr>
     </tbody>
   </table>
 </main>

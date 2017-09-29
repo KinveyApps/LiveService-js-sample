@@ -2,6 +2,7 @@ import { Component, ChangeDetectorRef, NgZone } from '@angular/core';
 import { Router } from '@angular/router';
 
 import { Observable } from 'rxjs/Observable';
+import 'rxjs/add/operator/do';
 
 import { KinveyService, AuctionsService } from '../services';
 import { Auction } from '../models';
@@ -13,6 +14,7 @@ import { Auction } from '../models';
 })
 export class HomeComponent {
   auctions: Observable<Auction[]>;
+  hasNoAuctions: boolean = false;
 
   constructor(
     private _kinveyService: KinveyService,
@@ -23,7 +25,10 @@ export class HomeComponent {
   ) { }
 
   ngOnInit() {
-    this.auctions = this._auctionsService.subscribeToAuctionCollectionWithInitialValue() as Observable<Auction[]>;
+    const obs = this._auctionsService.subscribeToAuctionCollectionWithInitialValue() as Observable<Auction[]>;
+    this.auctions = obs.do((auctions) => {
+      this.hasNoAuctions = auctions && !auctions.length;
+    });
   }
 
   viewDetails(id: string) {

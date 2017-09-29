@@ -12,7 +12,7 @@ import { Kinvey } from 'kinvey-angular2-sdk';
 import { KinveyService } from './kinvey.service';
 import { UsersService } from './users.service';
 import { LiveDataService } from './live-data.service';
-import { Auction, BidMessage, StreamMessage, StreamMessageType } from '../models';
+import { Auction, BidMessage, StreamMessage, StreamMessageType, NetworkStore } from '../models';
 import { isNonemptyString, cloneObject, makeObservableZoneAware } from '../shared';
 
 const collectionName = 'Auctions';
@@ -20,7 +20,7 @@ const streamName = collectionName;
 
 @Injectable()
 export class AuctionsService {
-  private _auctions: Kinvey.CacheStore<Auction>;
+  private _auctions: NetworkStore<Auction>;
 
   constructor(
     private _kinveyService: KinveyService,

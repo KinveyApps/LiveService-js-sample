@@ -5,7 +5,7 @@ export * from './stream-message.model';
 
 export type User = Kinvey.User;
 export type Entity = Kinvey.Entity;
-export type CacheStore<T extends Kinvey.Entity> = Kinvey.CacheStore<T>;
+export type NetworkStore<T extends Kinvey.Entity> = Kinvey.NetworkStore<T>;
 export type Query = Kinvey.Query;
 
 export interface Stream {

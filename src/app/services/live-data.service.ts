@@ -5,7 +5,7 @@ import 'rxjs/add/operator/map';
 import 'rxjs/add/operator/filter';
 
 import { Kinvey } from 'kinvey-angular2-sdk';
-import { Entity, Stream, CacheStore, StreamMessage } from '../models';
+import { Entity, Stream, NetworkStore, StreamMessage } from '../models';
 
 import { KinveyService } from './kinvey.service';
 
@@ -13,6 +13,7 @@ import { KinveyService } from './kinvey.service';
 export class LiveDataService {
   private updatesByCollection: { [collName: string]: ReplaySubject<Entity> } = {};
   private streamsById: { [ownerId: string]: Stream } = {};
+  private _liveServiceInitPromise: Promise<void> = null;
 
   constructor(
     private _kinveyService: KinveyService,
@@ -43,9 +44,11 @@ export class LiveDataService {
   }
 
   subscribeForCollectionUpdates<T extends Entity>(collectionName: string, interestedIn?: Entity[]): Observable<T> {
-    this._subForCollection(collectionName);
-    const obs = this.updatesByCollection[collectionName].asObservable() as Observable<T>;
+    if (!this.updatesByCollection[collectionName]) {
+      this._subForCollection(collectionName);
+    }
 
+    const obs = this.updatesByCollection[collectionName].asObservable() as Observable<T>;
     return obs.filter((item) => {
       return !interestedIn || interestedIn.some(o => o._id === item._id);
     });
@@ -65,15 +68,18 @@ export class LiveDataService {
 
   subscribeToStream(streamName: string, streamOwnerId: string, receiver: (msg: StreamMessage) => void) {
     const stream = this._getStream(streamName);
-    return stream.follow(streamOwnerId, {
-      onMessage: (m) => {
-        this._zone.run(() => {
-          receiver(m);
+    return this._ensureLiveServiceInit()
+      .then(() => {
+        return stream.follow(streamOwnerId, {
+          onMessage: (m) => {
+            this._zone.run(() => {
+              receiver(m);
+            });
+          },
+          onError: (e) => console.error(`Error on ${streamName} stream: `, e),
+          onStatus: (s) => console.log(`Status update on ${streamName} stream: `, s)
         });
-      },
-      onError: (e) => console.error(`Error on ${streamName} stream: `, e),
-      onStatus: (s) => console.log(`Status update on ${streamName} stream: `, s)
-    });
+      });
   }
 
   // Stream actions don't check for live service init. maybe todo?
@@ -100,11 +106,10 @@ export class LiveDataService {
   }
 
   private _ensureLiveServiceInit() {
-    let promise = Promise.resolve();
-    if (!this._kinveyService.liveServiceInitialized()) {
-      promise = this._kinveyService.initLiveService();
+    if (!this._liveServiceInitPromise) {
+      this._liveServiceInitPromise = this._kinveyService.initLiveService();
     }
-    return promise;
+    return this._liveServiceInitPromise;
   }
 
   private _subForCollection(collectionName: string) {
@@ -122,7 +127,7 @@ export class LiveDataService {
       });
   }
 
-  private _subForLiveData(collection: CacheStore<Entity>, subj: ReplaySubject<Entity>) {
+  private _subForLiveData(collection: NetworkStore<Entity>, subj: ReplaySubject<Entity>) {
     return collection.subscribe({
       onMessage: (msg) => {
         this._zone.run(() => {
@@ -144,7 +149,7 @@ export class LiveDataService {
       });
   }
 
-  private _unsubFromLiveData(collection: CacheStore<Entity>) {
+  private _unsubFromLiveData(collection: NetworkStore<Entity>) {
     return collection.unsubscribe();
   }
 }

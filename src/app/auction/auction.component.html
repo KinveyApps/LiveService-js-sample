@@ -21,10 +21,7 @@
         <span>Your last bid:</span>
         <span class="label label-danger">{{ userBid | currency:USD:true }}</span>
         <div *ngIf="isHighestBidder()">
-          <span class="label label-success">You are the highest bidder!</span>*
-          <div>
-            <small>*you may be sharing your position with one or more others</small>
-          </div>
+          <span class="label label-success">You are the highest bidder!</span>
         </div>
       </div>
 
