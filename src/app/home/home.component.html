@@ -16,7 +16,7 @@
       <tr role="button" auction-list-item [auction]="auction" *ngFor="let auction of auctions | async" (click)="viewDetails(auction._id)"></tr>
       <tr *ngIf="hasNoAuctions">
         <td colspan="5" class="text-center">
-          <span class="label label-info">No auctions yet.</span>
+          <span class="label label-info" [routerLink]="['/new']" role="button">No auctions yet. Create one?</span>
         </td>
       </tr>
     </tbody>
