@@ -137,7 +137,7 @@ export class AuctionComponent implements OnInit, OnDestroy {
       .then(() => this._auctionsService.finishAuction(this.auction))
       .then(() => {
         const msg: AuctionEndMessage = {
-          fromUser: (this.auction._acl as any).creator,
+          fromUser: this.auction._acl.creator,
           type: StreamMessageType.AuctionEnd,
           winner: this._lastAcceptedBiderId
         };

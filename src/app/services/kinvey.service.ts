@@ -15,7 +15,7 @@ export class KinveyService {
   }
 
   private get LiveService() {
-    return (Kinvey as any).LiveService;
+    return Kinvey.LiveService;
   }
 
   getActiveUser() {
@@ -42,7 +42,7 @@ export class KinveyService {
   }
 
   initLiveService(): Promise<void> {
-    const user = Kinvey.User.getActiveUser() as any;
+    const user = Kinvey.User.getActiveUser();
     if (user) {
       return user.registerForLiveService();
     }
@@ -50,7 +50,7 @@ export class KinveyService {
   }
 
   uninitializeLiveService() {
-    const user = Kinvey.User.getActiveUser() as any;
+    const user = Kinvey.User.getActiveUser();
     if (user) {
       return user.unregisterFromLiveService();
     }
@@ -58,7 +58,7 @@ export class KinveyService {
   }
 
   getNewStream(name: string): Stream {
-    return new (Kinvey as any).LiveService.Stream(name);
+    return new Kinvey.LiveService.Stream(name);
   }
 
   getNewCollection<T extends Kinvey.Entity>(name: string) {

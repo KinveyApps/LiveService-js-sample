@@ -90,7 +90,7 @@ export class AuctionsService {
   subscribeForBids(auction: Auction, onBids: (bid: BidMessage) => void) {
     const promises = auction.participants.map(participantId => {
       return this._liveDataService.subscribeToStream(streamName, participantId, (msg: BidMessage) => {
-        if (msg.fromUser && msg.fromUser !== (auction._acl as any).creator) { // creator's messages are not bids
+        if (msg.fromUser && msg.fromUser !== auction._acl.creator) { // creator's messages are not bids
           onBids(msg);
         }
       });
@@ -123,7 +123,7 @@ export class AuctionsService {
 
   // cant handle multiple auctions
   registerForAuction(auction: Auction, userId: string) {
-    const auctionOwnerId = (auction._acl as any).creator;
+    const auctionOwnerId = auction._acl.creator;
 
     return this.isSubbedForAnyAuction(userId)
       .then((isRegistered) => {
